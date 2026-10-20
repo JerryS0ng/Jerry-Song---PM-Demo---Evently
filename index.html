@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evently</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+<style>
+/* All colors live here so light and dark mode stay in sync.
+   Evently (setup site + side panel) uses pine and gold; the calendar app around it stays neutral. */
+:root{
+  color-scheme:light;
+  --bg:#F3EDE2;--surface:#FBF8F1;--surface-2:#ECE5D8;
+  --ink:#1E2420;--ink-2:#4D534C;--ink-3:#646860;
+  --line:#DFD7C7;--line-strong:#C5BBA7;
+  --pine:#00693E;--pine-hover:#00532F;--on-pine:#FFFFFF;--pine-tint:#DDEBE0;
+  --gold:#00693E;--gold-strong:#00693E;--on-gold:#FFFFFF;--gold-tint:#E7F0E8;--gold-tint-hl:#D3E6D7;
+  --maple:#A8432F;--maple-tint:#F6E1D9;
+  --focus:#00693E;--shadow:0 12px 32px rgba(60,45,20,.18);
+  --h-bg:#FFFFFF;--h-hover:#EFF1F4;--h-line:#E1E4E8;--h-line-2:#ECEEF1;
+  --h-ink:#1E2227;--h-ink-2:#59616B;--h-ink-3:#6B737D;
+  --h-accent:#4F56C9;--h-on-accent:#FFFFFF;--h-accent-tint:#E6E7FA;--h-now:#D63A3A;
+  --class-fill:#E4E7EB;--class-bar:#66717E;
+  --personal-fill:#DCEAF4;--personal-bar:#3A76A1;
+  --font-ui:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --font-display:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --font-host:system-ui,-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --hour:40px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:dark;
+    --bg:#1A1916;--surface:#23211C;--surface-2:#2D2A24;
+    --ink:#EEE8DC;--ink-2:#C5BDAF;--ink-3:#A39B8E;
+    --line:#37322B;--line-strong:#4C463D;
+    --pine:#4FB07F;--pine-hover:#66C393;--on-pine:#071A10;--pine-tint:#1E3527;
+    --gold:#4FB07F;--gold-strong:#4FB07F;--on-gold:#071A10;--gold-tint:#1C3024;--gold-tint-hl:#26402F;
+    --maple:#E38B73;--maple-tint:#3C2620;
+    --focus:#7FD3A5;--shadow:0 12px 32px rgba(0,0,0,.55);
+    --h-bg:#16181B;--h-hover:#24282D;--h-line:#2D3137;--h-line-2:#23272C;
+    --h-ink:#E4E7EB;--h-ink-2:#A9B0B8;--h-ink-3:#8E969F;
+    --h-accent:#9096F0;--h-on-accent:#121433;--h-accent-tint:#272B4F;--h-now:#F06A6A;
+    --class-fill:#262B31;--class-bar:#8F9BA8;
+    --personal-fill:#1B2C38;--personal-bar:#6DA6D0;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font-ui);font-size:15px;line-height:1.45;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{padding:0}
+
+/* Prototype bar (not part of the product) */
+.proto{position:sticky;top:0;z-index:40;display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px}
+.mark{color:var(--pine)}
+.proto-tag{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border-radius:4px;padding:2px 7px}
+.steps{display:flex;flex-wrap:wrap;gap:2px;list-style:none;margin:0;padding:0}
+.step-btn{display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);font-weight:600;font-size:14px}
+.step-btn:hover{background:var(--surface-2);color:var(--ink)}
+.step-btn .num{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface-2);font-size:12.5px;font-weight:700}
+.step-btn[aria-current="step"]{background:var(--pine-tint);color:var(--ink)}
+.step-btn[aria-current="step"] .num{background:var(--pine);color:var(--on-pine)}
+.caption{flex:1 1 260px;margin:0;font-size:13.5px;color:var(--ink-2)}
+.restart{margin-left:auto}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);font-weight:600;font-size:15px;line-height:1.2}
+.btn:hover{background:var(--surface-2)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:disabled:hover{background:var(--surface)}
+.btn-primary{background:var(--pine);border-color:var(--pine);color:var(--on-pine)}
+.btn-primary:hover{background:var(--pine-hover);border-color:var(--pine-hover)}
+.btn-primary:disabled:hover{background:var(--pine);border-color:var(--pine)}
+.btn-lg{min-height:46px;padding:10px 22px;font-size:16px}
+.btn-sm{min-height:34px;padding:5px 12px;font-size:14px}
+.link{padding:2px 0;border:0;background:none;color:var(--pine);font-weight:600;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.link:hover{text-decoration-thickness:2px}
+
+/* Screen 1: setup website */
+.setup{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:56px;align-items:start;max-width:1120px;margin:0 auto;padding:48px 24px 72px}
+.setup-title{margin:0 0 14px;font-family:var(--font-display);font-weight:700;font-size:46px;line-height:1.02;letter-spacing:-.01em}
+.lede{max-width:32em;margin:0 0 36px;font-size:18px;line-height:1.5;color:var(--ink-2)}
+.sstep{display:grid;grid-template-columns:32px minmax(0,1fr);gap:0 18px;padding:24px 0 26px;border-top:1px solid var(--line)}
+.sstep-num{display:grid;place-items:center;width:32px;height:32px;border:2px solid var(--line-strong);border-radius:50%;background:var(--surface);font-weight:700;font-size:14px;color:var(--ink-2)}
+.sstep.done .sstep-num{background:var(--pine);border-color:var(--pine);color:var(--on-pine)}
+.sstep h2{margin:3px 0 4px;font-size:21px;line-height:1.25;font-weight:700}
+.optional{font-weight:500;font-size:15px;color:var(--ink-3)}
+.help{max-width:36em;margin:0 0 16px;color:var(--ink-2)}
+.connected{display:flex;gap:12px;align-items:flex-start;max-width:34em;padding:12px 16px;border-radius:10px;background:var(--pine-tint)}
+.connected svg{flex:none;margin-top:1px;color:var(--pine)}
+.connected p{margin:0}
+.muted{color:var(--ink-2);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);font-weight:500;font-size:14.5px}
+.chip:hover{border-color:var(--pine)}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.chip:disabled:hover{border-color:var(--line-strong)}
+.chip .ck{display:none;color:var(--pine)}
+.chip[aria-pressed="true"]{background:var(--pine-tint);border-color:var(--pine);font-weight:600}
+.chip[aria-pressed="true"] .ck{display:block}
+.q-label{display:block;margin:0 0 8px;font-weight:600}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg span{display:block;min-width:52px;padding:7px 16px;border-left:1px solid var(--line-strong);background:var(--surface);text-align:center;font-weight:600;font-size:14.5px}
+.seg label:first-child span{border-left:0}
+.seg input:checked+span{background:var(--pine);color:var(--on-pine)}
+.seg input:focus-visible+span{outline:2px solid var(--focus);outline-offset:-4px}
+.cta{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding-top:24px;border-top:1px solid var(--line)}
+.cta p{margin:0;font-size:14px;color:var(--ink-3)}
+
+/* The deeper survey: one question at a time */
+.survey{max-width:640px;padding:18px 20px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.sv-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.sv-count{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.sv-bar{display:flex;gap:4px;margin:0;padding:0;list-style:none}
+.sv-bar li{width:26px;height:5px;border-radius:3px;background:var(--line)}
+.sv-bar li.on{background:var(--pine)}
+.sv-q{margin:0 0 4px;font-size:19px;font-weight:700;line-height:1.3}
+.sv-hint{max-width:34em;margin:0 0 14px;font-size:14px;color:var(--ink-2)}
+.sv-note{margin:10px 0 0;font-size:13.5px;color:var(--ink-3)}
+.sv-nav{display:flex;align-items:center;gap:14px;margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
+.sv-nav .spacer{flex:1}
+.sub-q{margin:0 0 16px}
+.sub-q:last-child{margin-bottom:0}
+.samples{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.sample{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.sample b{display:block;font-size:15px}
+.sample small{display:block;font-size:13px;color:var(--ink-2)}
+.yn{display:flex;gap:6px}
+.yn button{min-height:34px;padding:5px 12px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);font-weight:600;font-size:13.5px}
+.yn button:hover{border-color:var(--pine)}
+.yn .yes[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:var(--on-pine)}
+.yn .no[aria-pressed="true"]{background:var(--surface-2);border-color:var(--ink-3)}
+.sv-done{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;max-width:640px;padding:12px 16px;border-radius:10px;background:var(--pine-tint)}
+.sv-done svg{color:var(--pine)}
+.sv-done p{margin:0}
+
+/* Live profile card */
+.profile{position:sticky;top:calc(var(--proto-h,56px) + 24px);max-height:calc(100vh - var(--proto-h,56px) - 48px);overflow:auto;padding:22px 22px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.profile-title{margin:0 0 6px;font-family:var(--font-display);font-weight:700;font-size:26px;line-height:1.1}
+.profile .sub{margin:0 0 14px;font-size:14px;color:var(--ink-2)}
+.pgroup{padding:14px 0 12px;border-top:1px solid var(--line)}
+.pgroup h3{margin:0 0 8px;font-size:14px;font-weight:700}
+.pgroup .empty{margin:0;font-size:14px;color:var(--ink-3)}
+.pgroup .pnote{margin:8px 0 0;font-size:13px;color:var(--ink-3)}
+.plist{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.pint,.pplain{display:grid;grid-template-columns:4px minmax(0,1fr);gap:10px;width:100%;padding:6px 8px 6px 4px;border:0;border-radius:8px;background:transparent;text-align:left}
+.pint:hover{background:var(--surface-2)}
+.blaze{display:block;border-radius:2px;background:var(--gold-strong)}
+.pplain .blaze{background:var(--pine)}
+.pint b,.pplain b{display:block;font-size:14.5px;font-weight:600}
+.pint small,.pplain small{display:block;font-size:12.5px;color:var(--ink-3)}
+.pint[aria-pressed="false"] b{color:var(--ink-3);text-decoration:line-through}
+.pint[aria-pressed="false"] .blaze{background:var(--line-strong)}
+.prows{display:grid;gap:8px;margin:0}
+.prows>div{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px}
+.prows dt{padding-top:1px;font-size:12.5px;font-weight:600;color:var(--ink-3)}
+.prows dd{margin:0;font-size:14px}
+.prows dd.unset{color:var(--ink-3)}
+
+/* Screens 2-4: a calendar app with the Evently side panel */
+.cal{display:flex;flex-direction:column;height:calc(100vh - var(--proto-h,56px));height:calc(100dvh - var(--proto-h,56px));background:var(--h-bg);color:var(--h-ink);font-family:var(--font-host);font-size:14px}
+.h-top{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-height:60px;padding:8px 14px 8px 8px;border-bottom:1px solid var(--h-line)}
+.h-icon{display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:10px;background:transparent;color:var(--h-ink-2)}
+button.h-icon:hover{background:var(--h-hover);color:var(--h-ink)}
+.h-app{display:flex;align-items:center;gap:8px;margin:0 18px 0 2px;font-size:19px;font-weight:500;color:var(--h-ink-2)}
+.h-app svg{color:var(--h-accent)}
+.h-pill{padding:7px 16px;border:1px solid var(--h-line);border-radius:8px;font-weight:600;font-size:14px}
+.h-arrows{display:flex;gap:6px;margin:0 2px;color:var(--h-ink-2)}
+.h-range{margin:0 0 0 6px;font-size:20px;font-weight:500;line-height:1.2;white-space:nowrap}
+.h-spacer{flex:1}
+.h-tools{display:flex;align-items:center;gap:16px;margin-right:12px;color:var(--h-ink-2)}
+.h-seg{display:inline-flex;margin-right:12px;border:1px solid var(--h-line);border-radius:8px;overflow:hidden}
+.h-seg span{padding:6px 12px;font-size:13.5px;font-weight:600;color:var(--h-ink-2)}
+.h-seg span+span{border-left:1px solid var(--h-line)}
+.h-seg .on{background:var(--h-accent-tint);color:var(--h-ink)}
+.h-avatar{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--h-accent);color:var(--h-on-accent);font-weight:700;font-size:14px}
+.h-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 56px}
+.h-body.sb{grid-template-columns:224px minmax(0,1fr) 56px}
+.h-body.pn{grid-template-columns:minmax(0,1fr) 360px 56px}
+.h-body.sb.pn{grid-template-columns:224px minmax(0,1fr) 360px 56px}
+.h-side{min-height:0;overflow:auto;padding:14px 12px 20px 14px}
+.h-new{display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;padding:9px 16px 9px 12px;border-radius:8px;background:var(--h-accent);color:var(--h-on-accent);font-weight:600}
+.mini{margin:0 0 22px}
+.mini-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 4px 6px;font-weight:600;font-size:14px}
+.mini-arrows{display:flex;gap:2px;color:var(--h-ink-2)}
+.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px;text-align:center;font-size:12px}
+.mini-dow{padding:4px 0;font-size:11px;font-weight:600;color:var(--h-ink-3)}
+.mini-d{display:grid;place-items:center;height:26px}
+.mini-d.out{color:var(--h-ink-3)}
+.mini-d.wk{background:var(--h-hover)}
+.mini-d.wk-s{border-radius:13px 0 0 13px}
+.mini-d.wk-e{border-radius:0 13px 13px 0}
+.mini-d.today span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--h-accent);color:var(--h-on-accent);font-weight:700}
+.h-sh{margin:0 0 6px 6px;font-size:14px;font-weight:600}
+.h-cals{margin:0;padding:0;list-style:none}
+.h-cals label{display:flex;align-items:center;gap:10px;padding:6px;border-radius:8px;cursor:pointer}
+.h-cals label:hover{background:var(--h-hover)}
+.h-cals input{width:16px;height:16px;margin:0;cursor:pointer}
+.h-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.grid-wrap{flex:1;min-height:0;overflow:auto}
+.ghead{position:sticky;top:0;z-index:6;min-width:616px;border-bottom:1px solid var(--h-line);background:var(--h-bg)}
+.grow,.grid-body{display:grid;grid-template-columns:56px repeat(7,minmax(80px,1fr));min-width:616px}
+.tz,.ad-gut{position:sticky;left:0;z-index:2;background:var(--h-bg)}
+.tz{display:flex;align-items:flex-end;justify-content:flex-end;padding:0 8px 4px 0;font-size:11px;color:var(--h-ink-3)}
+.dh{display:flex;align-items:center;gap:6px;padding:8px 8px 6px 10px;font-size:13px;font-weight:600;color:var(--h-ink-2)}
+.dn{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;font-size:20px;font-weight:500;color:var(--h-ink)}
+.dh.today{color:var(--h-accent)}
+.dh.today .dn{background:var(--h-accent);color:var(--h-on-accent)}
+.ad-cell{min-width:0;min-height:28px;padding:2px 3px 4px;border-left:1px solid var(--h-line)}
+.ad-chip{display:block;overflow:hidden;padding:2px 8px;border-radius:5px;background:var(--personal-fill);box-shadow:inset 3px 0 0 var(--personal-bar);font-size:12px;font-weight:600;white-space:nowrap;text-overflow:ellipsis}
+.grid-body{position:relative;height:calc(var(--hour) * 16 + 10px)}
+.gutter{position:sticky;left:0;z-index:4;background:var(--h-bg)}
+.gutter span{position:absolute;right:8px;transform:translateY(-50%);font-size:11px;color:var(--h-ink-3);white-space:nowrap}
+.gutter span.first{transform:none}
+.col{position:relative;border-left:1px solid var(--h-line);background-image:repeating-linear-gradient(to bottom,var(--h-line-2) 0,var(--h-line-2) 1px,transparent 1px,transparent var(--hour))}
+.now{position:absolute;left:0;right:0;z-index:3;height:2px;background:var(--h-now);pointer-events:none}
+.now::before{content:"";position:absolute;left:-6px;top:-5px;width:12px;height:12px;border-radius:50%;background:var(--h-now)}
+.blk{position:absolute;margin:0;padding:3px 6px 3px 9px;border:0;border-radius:6px;overflow:hidden;background:none;color:var(--h-ink);text-align:left;font-size:12px;line-height:1.25}
+.blk .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:600}
+.blk .m{display:block;overflow:hidden;font-size:11.5px;color:var(--h-ink-2);white-space:nowrap;text-overflow:ellipsis}
+.blk.short .t{-webkit-line-clamp:1}
+.blk.class{background:var(--class-fill);box-shadow:inset 3px 0 0 var(--class-bar)}
+.blk.personal{background:var(--personal-fill);box-shadow:inset 3px 0 0 var(--personal-bar)}
+/* Suggestions are drawn by Evently, so they use Evently's typeface and colors. */
+.blk.pick,.blk.conflict{padding-left:7px;border:1.5px dashed var(--gold);background:var(--gold-tint);color:var(--ink);font-family:var(--font-ui);cursor:pointer}
+.blk.pick .m,.blk.conflict .m{color:var(--ink-2)}
+.blk.conflict{border-color:var(--maple);background:var(--maple-tint)}
+.blk.pick:hover,.blk.pick.hl{background:var(--gold-tint-hl)}
+.blk.sel{z-index:2;border-style:solid;border-width:2px}
+.blk.added{background:var(--pine);color:var(--on-pine);cursor:pointer}
+.blk.added .m{color:var(--on-pine);opacity:.88}
+.blk.added:hover,.blk.added.hl{background:var(--pine-hover)}
+.blk.added.sel{z-index:2;box-shadow:0 0 0 2px var(--h-bg),0 0 0 4px var(--pine)}
+.blk .tiny{display:inline-block;margin-right:3px;vertical-align:-1px}
+/* The one big moment: a dashed suggestion gets painted solid, like a trail blaze. */
+.blk.just::after{content:"";position:absolute;inset:0;border:1.5px dashed var(--gold);border-radius:inherit;background:var(--gold-tint);animation:unpaint .8s cubic-bezier(.55,0,.25,1) .05s forwards}
+@keyframes unpaint{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(0 0 0 100%)}}
+.blk.enter{animation:drop .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 80ms + 120ms)}
+@keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.rail{display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 0;border-left:1px solid var(--h-line);background:var(--h-bg)}
+button.rail-btn{position:relative;width:42px;height:42px;color:var(--pine)}
+button.rail-btn:hover{background:var(--h-hover);color:var(--pine)}
+button.rail-btn[aria-pressed="true"]{background:var(--pine-tint)}
+.rail-sep{width:24px;height:1px;background:var(--h-line)}
+.rail-add{display:grid;place-items:center;width:42px;height:42px;color:var(--h-ink-3)}
+.count{position:absolute;top:0;right:-2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold-strong);color:var(--on-gold);font-size:11.5px;font-weight:700;line-height:18px;text-align:center}
+
+/* Side panel (the extension) */
+.panel{display:flex;flex-direction:column;min-width:0;min-height:0;border-left:1px solid var(--h-line);background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px}
+.phead{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.pname{font-weight:700;font-size:16px}
+.icon-btn{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--ink-2)}
+.icon-btn:hover{background:var(--surface-2);color:var(--ink)}
+.phead .icon-btn{margin-left:auto}
+.pbody{display:flex;flex-direction:column;flex:1;min-height:0;overflow:auto;padding:22px 18px 0}
+.ptitle{margin:0 0 8px;font-family:var(--font-display);font-weight:700;font-size:30px;line-height:1.05}
+.psub{margin:0 0 14px;font-size:14px;color:var(--ink-2)}
+.picks{margin:0;padding:0;list-style:none}
+.picks li{border-top:1px solid var(--line)}
+.pi{display:grid;grid-template-columns:20px minmax(0,1fr);gap:12px;width:100%;padding:14px 10px 14px 6px;border:0;border-radius:8px;background:transparent;color:var(--ink);text-align:left}
+.pi:hover,.pi.hl{background:var(--surface)}
+.pi-body>span{display:block}
+.when{font-size:13px;font-weight:600;color:var(--ink-2)}
+.pi .title{margin:2px 0;font-size:16.5px;font-weight:700;line-height:1.25}
+.where{font-size:13.5px;color:var(--ink-2)}
+.why{margin-top:6px;font-size:13.5px}
+.pi-body>.state{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;font-weight:700;color:var(--pine)}
+.pi-body>.state.warn{color:var(--maple)}
+.subhead{margin:22px 0 4px;font-size:15px;font-weight:700}
+.note{margin:16px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:13.5px;color:var(--ink-2)}
+.pfoot{margin-top:auto;padding:22px 0 18px;font-size:12.5px;color:var(--ink-3)}
+.pfoot p{margin:0 0 6px}
+.back{display:inline-flex;align-items:center;gap:2px;align-self:flex-start;margin:-8px 0 12px -10px;padding:6px 10px 6px 4px;border:0;border-radius:8px;background:transparent;color:var(--ink-2);font-weight:600;font-size:14px}
+.back:hover{background:var(--surface-2);color:var(--ink)}
+.dmeta{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.dtitle{margin:0 0 14px;font-family:var(--font-display);font-weight:700;font-size:28px;line-height:1.1}
+.facts{display:grid;grid-template-columns:16px minmax(0,1fr);gap:7px 10px;align-items:start;margin:0 0 16px;font-size:14.5px}
+.facts svg{margin-top:2px;color:var(--ink-3)}
+.desc{margin:0 0 18px;font-size:15px;line-height:1.55}
+.why-box{margin:0 0 16px;padding:14px 16px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.why-box h3,.sorted h3{margin:0 0 6px;font-size:15px;font-weight:700}
+.rows{margin:0}
+.rows>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:6px 0}
+.why-box .rows>div+div{border-top:1px solid var(--line)}
+.rows dt{padding-top:1px;font-size:13px;font-weight:600;color:var(--ink-3)}
+.rows dd{margin:0;font-size:14px}
+.rows dd span{display:block}
+.rows dd span+span{margin-top:4px}
+.rows dd span.warn{color:var(--maple);font-weight:600}
+.sorted{margin:0 0 18px}
+.tag{display:inline-block;margin:0 4px 4px 0;padding:1px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);font-size:12.5px}
+.also{margin:0 0 16px;padding:12px 14px;border:1.5px dashed var(--gold);border-radius:12px;background:var(--gold-tint)}
+.also p{margin:0 0 6px;font-size:13.5px;color:var(--ink-2)}
+.also-btn{display:block;width:100%;padding:0;border:0;background:transparent;color:var(--ink);text-align:left}
+.also-btn .t{display:block;font-weight:700;font-size:15px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.also-btn .m{display:block;font-size:13px;color:var(--ink-2)}
+.dactions{position:sticky;bottom:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:auto -18px 0;padding:12px 18px 16px;border-top:1px solid var(--line);background:var(--bg)}
+.added-msg{display:flex;align-items:center;gap:6px;margin-right:auto;font-weight:700;color:var(--pine)}
+.toast{position:fixed;left:50%;bottom:24px;z-index:60;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);padding:10px 10px 10px 16px;border-radius:10px;background:var(--ink);color:var(--bg);box-shadow:var(--shadow);font-size:14.5px;transform:translateX(-50%)}
+.toast button{padding:6px 10px;border:0;border-radius:6px;background:transparent;color:var(--bg);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.toast button:focus-visible{outline-color:var(--bg)}
+.toast.show{animation:toast .22s ease-out both}
+@keyframes toast{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+@media (max-width:1000px){
+  .setup{grid-template-columns:minmax(0,1fr);gap:28px;padding-top:32px}
+  .profile{position:static;max-height:none}
+  .cal{height:auto}
+  .h-body,.h-body.sb,.h-body.pn,.h-body.sb.pn{display:flex;flex-direction:column}
+  .h-side,.h-top [data-action="sidebar"],.h-tools,.h-seg{display:none}
+  .h-main{order:1;height:70vh}
+  .rail{order:2;flex-direction:row;padding:8px 12px;border-left:0;border-top:1px solid var(--h-line)}
+  .panel{order:3;border-left:0}
+  .pbody{overflow:visible}
+}
+@media (max-width:640px){
+  .setup{padding:24px 16px 56px}
+  .setup-title{font-size:36px}
+  .sstep{grid-template-columns:28px minmax(0,1fr);gap:0 12px}
+  .sstep-num{width:28px;height:28px;font-size:13px}
+  .survey{padding:16px 14px 12px}
+  .step-btn{padding:4px}
+  .step-btn .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  .caption{order:3;flex-basis:100%}
+  .h-app span{display:none}
+  .h-app{margin-right:6px}
+  .h-range{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .blk.just::after{display:none}
+}
+
+/* ===== v4: tabs, working calendar controls, month view, priority ===== */
+:root{--h-out:#F7F8FA}
+@media (prefers-color-scheme:dark){:root{--h-out:#1A1C20}}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:0;padding:0;list-style:none}
+.tab-btn{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 10px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);font-weight:600;font-size:14px}
+.tab-btn:hover{background:var(--surface-2);color:var(--ink)}
+.tab-btn svg{color:var(--ink-3)}
+.tab-btn[aria-current="page"]{background:var(--pine-tint);color:var(--ink)}
+.tab-btn[aria-current="page"] svg{color:var(--pine)}
+button.h-pill{background:transparent;color:inherit;cursor:pointer}
+button.h-pill:hover{background:var(--h-hover)}
+.h-arrows button{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:var(--h-ink-2)}
+.h-arrows button:hover:not(:disabled){background:var(--h-hover);color:var(--h-ink)}
+.h-arrows button:disabled{opacity:.35;cursor:not-allowed}
+.h-seg>*+*{border-left:1px solid var(--h-line)}
+.h-seg button{padding:6px 12px;border:0;background:transparent;font-size:13.5px;font-weight:600;color:var(--h-ink-2)}
+.h-seg button:hover{background:var(--h-hover);color:var(--h-ink)}
+.h-seg button[aria-pressed="true"]{background:var(--h-accent-tint);color:var(--h-ink)}
+.h-seg .inert{color:var(--h-ink-3)}
+.h-switch{display:inline-flex;align-items:center;gap:8px;margin-right:12px;padding:5px 12px 5px 6px;border:1px solid var(--h-line);border-radius:999px;background:transparent;color:var(--h-ink);font-size:13.5px;font-weight:600}
+.h-switch:hover{background:var(--h-hover)}
+.sw-track{position:relative;display:block;width:30px;height:18px;border-radius:9px;background:var(--h-line);transition:background .15s}
+.sw-knob{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .15s}
+.h-switch[aria-checked="true"] .sw-track{background:var(--gold-strong)}
+.h-switch[aria-checked="true"] .sw-knob{transform:translateX(12px)}
+button.mini-d{width:100%;padding:0;border:0;background:transparent;color:inherit;font-size:12px;cursor:pointer}
+.mini-d span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%}
+button.mini-d:hover span{background:var(--h-line)}
+button.mini-d.today:hover span{background:var(--h-accent)}
+.dh.past,.dh.past .dn{color:var(--h-ink-3)}
+button.ad-chip{width:100%;border:0;text-align:left;font-size:12px;font-weight:600;cursor:pointer}
+.ad-chip+.ad-chip{margin-top:2px}
+.ad-chip.pick{border:1.5px dashed var(--gold);background:var(--gold-tint);box-shadow:none;color:var(--ink);font-family:var(--font-ui)}
+.ad-chip.pick:hover,.ad-chip.pick.hl{background:var(--gold-tint-hl)}
+.ad-chip.added{background:var(--pine);box-shadow:none;color:var(--on-pine)}
+.ad-chip.sel,.m-chip.sel{outline:2px solid var(--pine);outline-offset:1px}
+/* Month view */
+.month{display:flex;flex-direction:column;min-width:640px;min-height:100%}
+.m-head{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--h-line);background:var(--h-bg)}
+.m-head span{padding:8px 10px;font-size:12.5px;font-weight:600;color:var(--h-ink-2)}
+.m-grid{flex:1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:minmax(112px,1fr)}
+.m-cell{min-width:0;overflow:hidden;padding:4px 4px 6px;border-right:1px solid var(--h-line);border-bottom:1px solid var(--h-line)}
+.m-cell:nth-child(7n){border-right:0}
+.m-cell.out{background:var(--h-out)}
+.m-date{display:grid;place-items:center;min-width:26px;height:26px;margin:0 0 2px 2px;padding:0 6px;border:0;border-radius:13px;background:transparent;font-size:12.5px;font-weight:600;color:var(--h-ink)}
+.m-date:hover{background:var(--h-hover)}
+.m-cell.past .m-date,.m-cell.out .m-date{color:var(--h-ink-3)}
+.m-cell.today .m-date{background:var(--h-accent);color:var(--h-on-accent)}
+.m-list{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;margin:0;padding:0;list-style:none}
+.m-list li{min-width:0}
+.m-chip{display:block;width:100%;overflow:hidden;padding:1px 6px;border:0;border-radius:4px;background:transparent;color:var(--h-ink);font-size:11.5px;line-height:1.5;text-align:left;white-space:nowrap;text-overflow:ellipsis}
+.m-t{margin-right:4px;color:var(--h-ink-2)}
+.m-chip.class{background:var(--class-fill)}
+.m-chip.personal,.m-chip.allday{background:var(--personal-fill)}
+.m-chip.allday{font-weight:600}
+.m-chip.pick{border:1px dashed var(--gold);background:var(--gold-tint);color:var(--ink);font-family:var(--font-ui);font-weight:600;cursor:pointer}
+.m-chip.pick .m-t{color:var(--ink-2)}
+.m-chip.pick:hover,.m-chip.pick.hl{background:var(--gold-tint-hl)}
+.m-chip.added{background:var(--pine);color:var(--on-pine);font-weight:600;cursor:pointer}
+.m-chip.added .m-t{color:var(--on-pine);opacity:.85}
+.m-chip.added:hover,.m-chip.added.hl{background:var(--pine-hover)}
+.m-more{padding:1px 6px;border:0;background:transparent;color:var(--h-ink-2);font-size:11.5px;font-weight:600;text-align:left}
+.m-more:hover{color:var(--h-ink);text-decoration:underline}
+.area-h{margin:22px 0 4px;font-size:16px;font-weight:700}
+
+/* ===== v5: Evently ===== */
+body{font-size:16px;font-optical-sizing:auto}
+.proto{gap:8px 18px;padding:10px 20px;background:var(--bg)}
+.brand{gap:9px;font-family:var(--font-display);font-weight:600;font-size:21px;color:var(--pine);letter-spacing:-.01em}
+.tab-btn{font-size:15px}
+.btn{border-radius:10px}
+/* Welcome */
+.welcome{max-width:640px;margin:0 auto;padding:13vh 24px 80px}
+.wordmark{display:flex;align-items:center;gap:10px;margin:0 0 44px;font-family:var(--font-display);font-weight:600;font-size:24px;color:var(--pine)}
+.w-title{margin:0 0 18px;font-family:var(--font-display);font-weight:600;font-size:54px;line-height:1.03;letter-spacing:-.02em}
+.w-lede{max-width:30em;margin:0 0 34px;font-size:19px;line-height:1.5;color:var(--ink-2)}
+.w-cta{min-width:300px;border-radius:999px}
+.w-fine{margin:14px 0 0;font-size:14.5px;color:var(--ink-3)}
+.w-connected{display:flex;gap:12px;align-items:flex-start;max-width:470px;margin:0 0 24px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.w-connected svg{flex:none;margin-top:3px;color:var(--pine)}
+.w-connected b{display:block;font-weight:600}
+.w-connected small{display:block;margin-top:2px;font-size:14.5px;color:var(--ink-2)}
+/* One question per screen */
+.ob{display:flex;flex-direction:column;max-width:640px;min-height:calc(100vh - var(--proto-h,56px));margin:0 auto;padding:0 24px}
+.ob-head{position:sticky;top:var(--proto-h,56px);z-index:5;display:flex;align-items:center;gap:16px;padding:18px 0 12px;background:var(--bg)}
+.ob-icon{display:grid;place-items:center;width:40px;height:40px;margin-left:-10px;border:0;border-radius:50%;background:transparent;color:var(--ink)}
+.ob-icon:hover{background:var(--surface-2)}
+.ob-progress{flex:1;height:4px;overflow:hidden;border-radius:2px;background:var(--line)}
+.ob-progress span{display:block;height:100%;border-radius:2px;background:var(--pine);transition:width .3s ease}
+.ob-skip{padding:8px 2px;border:0;background:transparent;color:var(--ink-2);font-weight:600;font-size:16px}
+.ob-skip:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.ob-back{display:inline-flex;align-items:center;gap:4px;margin-left:-8px;padding:8px 12px 8px 4px;border:0;border-radius:10px;background:transparent;color:var(--ink-2);font-weight:600;font-size:16px}
+.ob-back:hover{background:var(--surface-2);color:var(--ink)}
+.ob-body{flex:1;padding:30px 0 28px}
+.ob-q{margin:0 0 10px;font-family:var(--font-display);font-weight:600;font-size:42px;line-height:1.06;letter-spacing:-.018em}
+.ob-hint{margin:0 0 28px;font-size:17.5px;line-height:1.45;color:var(--ink-2)}
+.ob-count{margin:18px 0 0;font-size:14.5px;color:var(--ink-3)}
+.ob-foot{position:sticky;bottom:0;display:flex;gap:12px;padding:20px 0 26px;background:linear-gradient(to bottom,rgba(0,0,0,0),var(--bg) 28%)}
+.ob-foot .btn{flex:1;border-radius:999px}
+.ob-finish{background:transparent}
+.pills{display:flex;flex-wrap:wrap;gap:10px}
+.pill{min-height:46px;padding:10px 19px;border:1.5px solid var(--line-strong);border-radius:999px;background:var(--surface);color:var(--ink);font-size:16.5px}
+.pill:hover{border-color:var(--pine)}
+.pill[aria-pressed="true"]{background:var(--pine);border-color:var(--pine);color:var(--on-pine)}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:16px;width:100%;padding:16px 18px;border:1.5px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-align:left}
+.opt:hover{border-color:var(--line-strong)}
+.opt[aria-pressed="true"]{border-color:var(--pine);background:var(--pine-tint)}
+.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt-text{flex:1;min-width:0}
+.opt-text b{display:block;font-size:18px;font-weight:600}
+.opt-text small{display:block;margin-top:2px;font-size:15px;color:var(--ink-2)}
+.opt-box{display:grid;place-items:center;flex:none;width:28px;height:28px;border:1.5px solid var(--line-strong);border-radius:50%;color:transparent}
+.opt[aria-pressed="true"] .opt-box{border-color:var(--pine);background:var(--pine);color:var(--on-pine)}
+.sgroup{margin-top:20px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.opts+.sgroup{margin-top:28px}
+.srow{display:flex;align-items:center;gap:16px;margin:0;padding:18px 18px}
+.srow+.srow{border-top:1px solid var(--line)}
+.srow.col{display:block}
+.srow-text{flex:1}
+.srow b{display:block;font-size:18px;font-weight:600}
+.srow small{display:block;margin-top:2px;font-size:15px;color:var(--ink-2)}
+.srow legend{float:left;width:100%;margin:0 0 12px}
+.srow-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.srow-val{font-size:16.5px;font-weight:600;color:var(--pine)}
+.rng{width:100%;height:28px;margin:0;accent-color:var(--pine);cursor:pointer}
+.seg2{clear:both;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg2 label{position:relative;display:block}
+.seg2 input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.seg2 span{display:block;padding:11px 8px;border:1.5px solid var(--line-strong);border-radius:12px;text-align:center;font-size:16px}
+.seg2 input:checked+span{border-color:var(--pine);background:var(--pine);color:var(--on-pine)}
+.seg2 input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+.tgl{position:relative;flex:none;width:52px;height:32px;border:0;border-radius:16px;background:var(--line-strong);transition:background .15s}
+.tgl-knob{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .15s}
+.tgl[aria-checked="true"]{background:var(--pine)}
+.tgl[aria-checked="true"] .tgl-knob{transform:translateX(20px)}
+/* "Would you go?" cards */
+.stack{display:flex;flex-direction:column;align-items:center}
+.ecard{width:100%;max-width:460px;min-height:236px;padding:28px 28px 26px;border:1px solid var(--line);border-radius:24px;background:var(--surface);box-shadow:0 16px 36px rgba(60,45,20,.13);animation:cardin .3s ease-out both}
+@keyframes cardin{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.ecard-when{margin:0 0 10px;font-size:15px;font-weight:600;color:var(--pine)}
+.ecard-title{margin:0 0 12px;font-family:var(--font-display);font-weight:600;font-size:31px;line-height:1.1;letter-spacing:-.01em}
+.ecard-blurb{margin:0;font-size:17.5px;line-height:1.5;color:var(--ink-2)}
+.ecard-actions{display:flex;gap:32px;margin-top:26px}
+.round{display:grid;place-items:center;width:66px;height:66px;border:1.5px solid var(--line-strong);border-radius:50%;background:var(--surface);box-shadow:0 6px 16px rgba(60,45,20,.12);transition:transform .12s}
+.round svg{width:26px;height:26px}
+.round.no{color:var(--maple)}
+.round.yes{color:var(--pine)}
+.round:hover{transform:translateY(-2px)}
+.ecard-labels{display:flex;gap:32px;margin-top:8px;font-size:14px;color:var(--ink-3)}
+.ecard-labels span{width:66px;text-align:center}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:24px}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--line-strong)}
+.dots .cur{background:var(--ink-2)}
+.dots .y{background:var(--pine)}
+.dots .n{background:var(--maple)}
+.card-done{max-width:460px;margin:0 auto;padding:30px 28px;border:1.5px dashed var(--line-strong);border-radius:24px;text-align:center}
+.cd-big{margin:0 0 6px;font-family:var(--font-display);font-size:27px;font-weight:600}
+.card-done .muted{margin:0 0 14px}
+/* Preferences */
+.prefs{max-width:680px;margin:0 auto;padding:52px 24px 80px}
+.prefs-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:18px;margin-bottom:30px}
+.prefs-title{margin:0 0 6px;font-family:var(--font-display);font-weight:600;font-size:42px;line-height:1.05;letter-spacing:-.018em}
+.prefs-sub{margin:0;font-size:17.5px;color:var(--ink-2)}
+.prefs-head .btn{border-radius:999px}
+.pgrp{margin:0 0 26px}
+.pgrp h2{margin:0 0 8px 4px;font-size:15px;font-weight:600;color:var(--ink-3)}
+.pgrp-list{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.prow{display:flex;align-items:center;gap:14px;width:100%;padding:15px 16px 15px 18px;border:0;background:transparent;color:var(--ink);text-align:left}
+.prow+.prow{border-top:1px solid var(--line)}
+button.prow:hover{background:var(--surface-2)}
+.prow-text{flex:1;min-width:0}
+.prow-text b{display:block;font-size:17px;font-weight:600}
+.prow-text small{display:-webkit-box;margin-top:2px;overflow:hidden;font-size:15px;color:var(--ink-2);-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.prow-text small.unset{color:var(--ink-3);font-style:italic}
+.prow>svg{flex:none;color:var(--ink-3)}
+.ok-pill{flex:none;padding:3px 11px;border-radius:999px;background:var(--pine-tint);color:var(--pine);font-size:13.5px;font-weight:600}
+/* Side panel */
+.pname{font-family:var(--font-display);font-weight:600;font-size:18px;color:var(--pine)}
+.pi{grid-template-columns:minmax(0,1fr);padding:14px 10px}
+.pi .title{font-weight:600;font-size:17.5px}
+.ptitle{font-weight:600;font-size:29px;letter-spacing:-.012em}
+.dtitle{font-weight:600;letter-spacing:-.01em}
+.dmatch{margin:0 0 6px;font-size:14.5px;font-weight:600;color:var(--pine)}
+.dmatch.warn{color:var(--maple)}
+.dsec{margin:0 0 20px}
+.dsec h3{margin:0 0 10px;font-size:16.5px;font-weight:600}
+.reasons{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+.reasons li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;font-size:15.5px;line-height:1.4}
+.reasons svg{margin-top:2px;color:var(--pine)}
+.reasons .warn{color:var(--maple)}
+.reasons .warn svg{color:var(--maple)}
+.reasons .time svg{color:var(--ink-3)}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags .tag{margin:0;padding:3px 11px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);font-size:14px}
+.tags .added-tag{border-style:dashed}
+.tags .area-tag{border-color:transparent;background:var(--pine-tint);color:var(--pine)}
+.tag-note{margin:8px 0 0;font-size:13.5px;color:var(--ink-3)}
+.dsource{margin:0 0 18px;font-size:14.5px;color:var(--ink-3)}
+.dsource a{color:var(--pine);font-weight:600}
+@media (max-width:640px){
+  .welcome{padding-top:8vh}
+  .w-title{font-size:40px}
+  .w-cta{min-width:0;width:100%}
+  .ob{padding:0 18px}
+  .ob-q,.prefs-title{font-size:33px}
+  .seg2 span{font-size:15px}
+}
+/* High priority */
+.prio{position:relative;min-width:46px;padding:8px 12px;color:var(--maple);font-weight:800;letter-spacing:.04em}
+.prio:hover{border-color:var(--maple)}
+.prio[aria-pressed="true"]{background:var(--maple);border-color:var(--maple);color:#fff}
+.prio::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);z-index:5;padding:5px 9px;border-radius:6px;background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:600;letter-spacing:0;white-space:nowrap;transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .12s}
+.prio:hover::after,.prio:focus-visible::after{opacity:1}
+.pflag{display:inline-block;margin-left:2px;padding:0 6px;border-radius:4px;background:var(--maple-tint);color:var(--maple);font-size:12px;font-weight:700}
+.dnote{margin:-8px 0 16px 26px;font-size:13.5px;color:var(--ink-2)}
+.dlink{display:inline-flex;align-items:center;gap:4px;margin-top:2px;color:var(--pine);font-weight:600}
+.facts a{color:var(--pine);font-weight:600}
+@media (max-width:1000px){.h-seg{display:inline-flex}}
+@media (max-width:640px){.h-switch{margin-right:4px}}
+</style>
+</head>
+<body>
+<header class="proto" id="proto">
+  <div class="brand">
+    <svg class="mark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="currentColor"/><path d="M7.5 8h9M7.5 12h6M7.5 16h9" style="stroke:var(--on-pine)" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span data-app-name>Evently</span>
+  </div>
+  <nav aria-label="Prototype views"><ul class="tabs" id="tabs"></ul></nav>
+  <button type="button" class="btn btn-sm restart" data-action="restart" data-key="restart">Restart demo</button>
+</header>
+<main>
+  <section id="screen-setup" aria-label="Setup website"></section>
+  <section id="screen-cal" aria-label="Calendar view" hidden></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+/* ===== Settings ===== */
+const APP = 'Evently';                        // product name: change it here
+const USER = 'Jerry Song';
+const EMAIL = 'jerry.song.30@dartmouth.edu';
+const HOUR = 40;                            // px per hour, matches --hour
+const DAY_START = 8 * 60;                   // week grid starts at 8 am
+const TODAY = 0;                            // day numbers count from Monday, Oct 19, 2026
+const NOW = TODAY * 1440 + 9 * 60 + 41;     // the demo is frozen at Monday 9:41 am
+const FIRST_DAY = -21, LAST_DAY = 13;       // the month view runs Sep 28 to Nov 1
+const MIN_SCORE = 2;                        // weakest match worth suggesting
+const PRIORITY = 'High Priority: ';
+const LISTING = id => 'https://home.dartmouth.edu/events/event?event=' + id;
+const SOURCES = {events:'Dartmouth Events Calendar', thayer:'Dartmouth Engineering events'};
+const urlOf = e => e.url || LISTING(e.id);
+
+const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const weekday = d => ((d % 7) + 7) % 7;
+const weekOf = d => Math.floor(d / 7) * 7;
+const dateOf = d => new Date(2026, 9, 19 + d);
+const dayNum = d => dateOf(d).getDate();
+const dayLabel = d => WD[weekday(d)] + ', ' + MON[dateOf(d).getMonth()] + ' ' + dayNum(d);
+function rangeLabel(a, b) {
+  const x = dateOf(a), y = dateOf(b);
+  return x.getMonth() === y.getMonth() ? MONTH[x.getMonth()] + ' ' + x.getDate() + '–' + y.getDate() + ', ' + y.getFullYear()
+    : MON[x.getMonth()] + ' ' + x.getDate() + ' – ' + MON[y.getMonth()] + ' ' + y.getDate() + ', ' + y.getFullYear();
+}
+
+/* ===== The student's own calendar (sample persona) ===== */
+const CLASSES = [
+  {title:'GOVT 3', room:'Silsby 028', weekdays:[0,2,4], start:610, end:675},
+  {title:'ENVS 2', room:'Fairchild 101', weekdays:[1,3], start:610, end:720},
+  {title:'PSYC 1', room:'Moore B03', weekdays:[0,2,4], start:850, end:915}
+];
+const PERSONAL = [
+  {title:'Cabin & Trail meeting', where:'Robinson Hall', weekday:1, start:1110, end:1170, ref:'your Cabin & Trail meeting'},
+  {title:'Lunch with Sam', where:'Foco', day:2, start:750, end:810, ref:'lunch with Sam'},
+  {title:'Novack shift', where:'Novack Cafe', weekday:3, start:1140, end:1260, ref:'your Novack shift'}
+];
+const ALLDAY = [{title:'Dartmouth Night', day:-17}, {title:"Sam's birthday", day:4}];
+// Real Dartmouth events this student already went to (event history)
+const PAST = [
+  {title:"Teatro La Plaza's Hamlet", short:'Hamlet', date:'Oct 1', day:-18, start:1170, where:'The Moore Theater', interests:['Theater'], categories:[]},
+  {title:'Mountainfilm on Tour 2026', short:'Mountainfilm on Tour', date:'Oct 17', day:-2, start:1140, where:'Spaulding Auditorium', interests:['Outdoors'], categories:['Films']}
+];
+// Interests the profile infers from the calendar
+const CAL_INTERESTS = [
+  {interest:'Politics', from:'GOVT 3', verb:'take GOVT 3'},
+  {interest:'Environment', from:'ENVS 2', verb:'take ENVS 2'},
+  {interest:'Psychology', from:'PSYC 1', verb:'take PSYC 1'},
+  {interest:'Outdoors', from:'Cabin & Trail meetings', verb:'go to Cabin & Trail meetings'}
+];
+
+/* ===== Survey ===== */
+// Same categories organizers pick on the Dartmouth Events Calendar
+const CATEGORIES = ['Arts','Athletics & Recreation','Clubs & Organizations','Diversity, Equity and Inclusion','Exhibitions','Films','Free Food','Lectures & Seminars','Off Campus Event','Performances','Service & Volunteer','Spiritual & Worship','Workshops & Training'];
+// Academic areas. Evently sorts talks, seminars, and workshops by field, using the host department and words in the listing.
+const AREAS = ['Mathematics','Computer Science & AI','Engineering','Physical Sciences','Life Sciences','Health & Medicine','Environment & Energy',
+  'Economics & Business','Government & Law','Psychology & Neuroscience','History','Literature & Writing','Languages & Cultures',
+  'Critical Studies','Art & Art History','Film & Media','Philosophy & Ethics','Education'];
+const AREA_HINT = {'Critical Studies':'Gender, sexuality, race, and Indigenous studies'};
+const GOALS = [
+  {id:'meet',   label:'Meet new people',     why:'meet new people',        short:'want to meet new people'},
+  {id:'career', label:'Explore careers',     why:'explore careers',        short:'want to explore careers'},
+  {id:'learn',  label:'Learn something new', why:'learn something new',    short:'want to learn something new'},
+  {id:'unwind', label:'Take a break',        why:'take a break from work', short:'want a break from work'},
+  {id:'club',   label:'Find a club to join', why:'find a club to join',    short:'are looking for a club'}
+];
+// Topics a calendar can't reveal (classes already cover politics, environment, psychology, and outdoors)
+const TOPICS = ['Startups','Research','Writing','Visual art','Music','Theater','Dance','Languages','Wellness','Social impact'];
+const CROWD = [{id:'small', label:'Small groups'}, {id:'big', label:'Big crowds'}, {id:'any', label:'Either'}];
+const SPARE = [{id:30, phrase:'30 minutes'}, {id:60, phrase:'hour'}, {id:120, phrase:'2 hours'}, {id:180, phrase:'3 hours'}, {id:9999, phrase:null}];
+const TRIPS = [{id:'yes', label:'Up for trips'}, {id:'no', label:'Stay on campus'}];
+const TIMES = ['Between classes','Weeknights','Weekends'];
+const TIME_PHRASE = {'Between classes':'You like events between classes.', 'Weeknights':'Weeknights work for you.', 'Weekends':'Weekends work for you.'};
+// "Would you have gone?" uses real Dartmouth events from earlier this month.
+const SAMPLES = [
+  {id:'macbeth', title:'Met Opera in HD: Macbeth', short:'the Macbeth opera screening', when:'Saturday, October 17', blurb:"Verdi's opera, screened live from New York at the Hop.", categories:[], interests:['Music','Theater']},
+  {id:'founder', title:'Forgotten Founder', short:'Forgotten Founder', when:'Saturday, October 17', blurb:"A documentary about Samson Occom and the part he played in Dartmouth's founding.", categories:['Films'], interests:['Social impact']},
+  {id:'keefe', title:'Julia Keefe Indigenous Big Band', short:'the big band concert', when:'Wednesday, October 14', blurb:'A night of big band jazz at the Hop.', categories:[], interests:['Music']},
+  {id:'aisocial', title:'How AI Is Restructuring Social Life', short:'the talk on AI and social life', when:'Wednesday, October 14', blurb:'A sociologist on how AI is changing the way institutions work.', categories:[], interests:['Research']}
+];
+const LOOK_FOR = {'Politics':'talks and films about politics', 'Environment':'climate and energy events', 'Psychology':'psychology and wellness events', 'Outdoors':'outdoor events'};
+const LOWER = {'Politics':'politics', 'Environment':'the environment', 'Psychology':'psychology', 'Outdoors':'the outdoors', 'Startups':'startups', 'Research':'research',
+  'Writing':'writing', 'Visual art':'visual art', 'Music':'music', 'Theater':'theater', 'Dance':'dance', 'Languages':'languages', 'Wellness':'wellness', 'Social impact':'social impact'};
+const VIBE = {small:'a small group', big:'a big crowd'};
+const STRENGTH = {1:'Possible match', 2:'Good match', 3:'Strong match'};
+
+/* ===== Real listings from the Dartmouth Events Calendar (home.dartmouth.edu/events), Oct 19 to Nov 1, 2026 =====
+   Titles, dates, times, places, hosts, and organizer tags come from the listings. The one-line
+   descriptions are short summaries written for this prototype; each event links to its original listing.
+   inferred = categories Evently adds from keywords in the description. interests, goals, and vibe are
+   Evently's own classification. where/host are null when this prototype didn't collect them. */
+const EVENTS = [
+  {id:'82792', short:'Discovery Science Seminar', title:'Discovery Science Seminar - X.Zhang', day:0, start:720, end:780,
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'seminar'}], interests:['Research'], keywords:['seminar','cancer genome'], goals:['learn'], vibe:'big',
+   desc:'A visiting University of Utah scientist presents research on gene regulation and the 3D structure of the cancer genome.'},
+  {id:'82626', short:'Microbiology seminar', title:'Microbiology & Immunology Seminar - K.Patrick', day:0, start:900, end:960,
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'seminar'}], interests:['Research'], keywords:['seminar','tuberculosis'], goals:['learn'], vibe:'big',
+   desc:'A Vanderbilt researcher presents work on how tuberculosis bacteria affect the immune cells they infect.'},
+  {id:'82747', short:'Free speech talk', title:'“Free Speech in Polarized Times” with Professor David Cole & Mohsen Mahdawi', day:0, start:930, end:1020, host:'Wright Center',
+   categories:['Free Food'], interests:['Politics'], keywords:['free speech','polarized'], goals:['learn'], vibe:'big',
+   desc:'A law professor reflects on a career defending free speech for people from every corner of politics.'},
+  {id:'82479', short:'Mindful Monday', title:'Virtual Mindful Monday Meditation', day:0, start:990, end:1020, where:'Online',
+   categories:[], interests:['Wellness','Psychology'], keywords:['mindfulness','meditation'], goals:['unwind'], vibe:'small',
+   desc:'A short online mindfulness session for any experience level.'},
+  {id:'82798', short:'Art History career workshop', title:'Art History Career Workshop: Museums & Galleries', day:0, start:1020, end:1080, where:'Carpenter 106', host:'Art History Department',
+   categories:['Arts','School of Arts and Sciences','Workshops & Training'], interests:['Visual art'], keywords:['curator','galleries'], goals:['career','learn'], vibe:'small',
+   desc:'Two alumni, a curator at the Guggenheim and the director of photography at Gagosian, talk about careers in museums and galleries.'},
+  {id:'82972', short:'DPU education debate', title:'DPU Secretary of Education Debate', day:0, start:1020, end:1095, host:'Dartmouth Political Union',
+   categories:[], interests:['Politics'], keywords:['debate','education policy'], goals:['learn'], vibe:'big',
+   desc:'Two former U.S. Secretaries of Education, Miguel Cardona and Margaret Spellings, debate where education policy goes next.'},
+  {id:'82679', short:'Tango for beginners', title:'2026 Fall Term Dartmouth Tango Series for Beginners', day:0, start:1170, end:1290,
+   categories:['Workshops & Training'], interests:['Dance'], keywords:['social dance','beginners'], goals:['meet','learn','unwind'], vibe:'small',
+   desc:'A fall-term series that teaches Argentine tango from the very first steps.'},
+  {id:'82941', short:'Biochemistry thesis seminar', title:'Biochemistry and Cell Biology Thesis Seminar - S.Najera', day:1, start:600, end:660,
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'seminar'}], interests:['Research'], keywords:['thesis','protein binding'], goals:['learn'], vibe:'small',
+   desc:"A PhD thesis talk on how two proteins in the cell's recycling system bind to each other."},
+  {id:'82838', short:'Cancer Center grand rounds', title:'Dartmouth Cancer Center Grand Rounds - E.Lansigan and J.Carter', day:1, start:720, end:780,
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'grand rounds'}], interests:['Research'], keywords:['grand rounds','lymphoma'], goals:['learn'], vibe:'big',
+   desc:'Two Geisel physicians on diagnosing and treating cutaneous lymphoma.'},
+  {id:'82991', short:'What Will I Become?', title:'What Will I Become? Film Screening & Discussion', day:1, start:990, end:1140, host:'Department of Film & Media Studies and South House',
+   categories:['Arts','Films'], interests:[], keywords:['screening','discussion'], goals:['learn','unwind'], vibe:'big',
+   desc:"A screening of Lexie Bean's film, then a discussion led by Professor Laura Horak."},
+  {id:'82547', short:'Guided relaxation', title:'Guided Relaxation with iRest yoga Nidra, and Journaling', day:2, start:930, end:975,
+   categories:['Free Food'], interests:['Wellness'], keywords:['yoga nidra','journaling'], goals:['unwind'], vibe:'small',
+   desc:'A lying-down guided relaxation practice, followed by time to journal.'},
+  {id:'83021', short:'Aukiñ performance', title:'Aukiñ: Protecting the Sounds of the Earth in the Climate Crisis', day:2, start:1050, end:1140,
+   categories:['Arts','Free Food'], interests:['Music','Environment'], keywords:['instruments','climate crisis'], goals:['unwind','learn'], vibe:'big',
+   desc:'Live music and media that ask how instruments, and the sounds they make, can survive a warming planet.'},
+  {id:'83057', short:'Energy Ventures info session', title:'Energy Ventures Info Session', day:2, start:1080, end:1140, where:'Murdough, 3rd floor MEM space', host:'Arthur L. Irving Institute for Energy and Society',
+   note:'Sign up through the form on the listing.',
+   categories:['Free Food','Workshops & Training'], interests:['Startups','Environment'], keywords:['entrepreneurs','climate'], goals:['career','learn'], vibe:'small',
+   desc:"An intro to the Irving Institute's program for students who want to launch energy and climate ventures. Pizza is provided, and you can ask about the 2026–27 session."},
+  {id:'82443', short:'Mr. Nobody Against Putin', title:'Mr. Nobody Against Putin (with director Pavel Talankin in person)', day:2, start:1140, end:1230,
+   categories:['Films'], interests:['Politics'], keywords:['documentary','propaganda'], goals:['learn'], vibe:'big',
+   desc:'A Russian teacher secretly filmed how state propaganda reached his classroom. This Oscar-winning documentary tells the story, and the director attends.'},
+  {id:'83076', short:'Hispanic Hemingway Conference', title:'Hispanic Hemingway Conference', day:3, allDay:true,
+   categories:['Arts','Free Food','Workshops & Training'], interests:['Writing','Languages'], keywords:['Hemingway','centenary'], goals:['learn'], vibe:'big',
+   desc:'A day-long conference for the 100th anniversary of The Sun Also Rises.'},
+  {id:'82821', short:'DartWrite help', title:'Advanced and Technical Help with DartWrite (workshop)', day:3, start:990, end:1080,
+   categories:['Arts','Workshops & Training'], interests:['Writing'], keywords:['WordPress','portfolio'], goals:['learn'], vibe:'small',
+   desc:'Drop in for help with your DartWrite site, from fixing problems to customizing the design.'},
+  {id:'82336', short:'Poetry & prose reading', title:'Poetry & Prose Reading Series: Eliana Ramage', day:3, start:990, end:1080, host:'English and Creative Writing Department',
+   categories:['Arts'], interests:['Writing'], keywords:['fiction','reading'], goals:['unwind','learn'], vibe:'small',
+   desc:"Alum and fiction writer Eliana Ramage '13 reads in the department's poetry and prose series."},
+  {id:'82898', short:'DURA research mixer', title:'DURA: Research Mixer', day:3, start:1020, end:1080, where:'Kemeny Hall 007', host:'Scholars programs, Undergraduate Research, and Fellowships (SURFD)',
+   categories:['Workshops & Training'], inferred:[{cat:'Free Food', from:'pizza'}], interests:['Research'], keywords:['research pitches','pizza'], goals:['meet','learn'], vibe:'small',
+   desc:'The Dartmouth Undergraduate Research Association hosts quick research pitches, games, and pizza for anyone curious about research.'},
+  {id:'82605', short:'Spotlight talk', title:'SPOTLIGHT TALK', day:3, start:1080, end:1110, where:'Hood Museum of Art', host:'Hood Museum of Art and Hopkins Center for the Arts',
+   note:'Free, but registration is required.',
+   categories:['Arts','Exhibitions','Films','Lectures & Seminars'], interests:['Visual art'], keywords:['gallery talk','labor'], goals:['learn'], vibe:'small',
+   desc:'A short gallery tour of the Division of Labor exhibition with its co-curators, who then introduce a screening of Maintenance Artist.'},
+  {id:'83054', short:'End-of-life options talk', title:'End-of-Life Options in the Live Free or Die State', day:3, start:1080, end:1200,
+   categories:['Workshops & Training'], interests:[], keywords:['advance directives','POLST'], goals:['learn'], vibe:'big',
+   desc:'A talk on planning for end-of-life care under New Hampshire law.'},
+  {id:'82337', short:'Breaking the Mold dinner', title:'Breaking the Mold: Careers for the Common Good - Dinner and Keynote Address', day:3, start:1080, end:1230,
+   categories:['Free Food'], interests:['Social impact'], keywords:['careers','common good'], goals:['career','meet'], vibe:'big',
+   desc:"Opening dinner of the Breaking the Mold conference on careers for the common good, with a keynote by Jim Bildner '75."},
+  {id:'82955', short:'Arabic Club', title:'Arabic Club', day:3, start:1110, end:1170, where:'Reed Hall 311',
+   categories:['Arts','Free Food','Workshops & Training'], interests:['Languages'], keywords:['Arabic','social'], goals:['meet','club','learn'], vibe:'small',
+   desc:'A low-key weekly meetup for practicing Arabic.'},
+  {id:'82444', short:'Maintenance Artist', title:'Maintenance Artist (with director Toby Freilich in person)', day:3, start:1140, end:1230, where:'Visual Arts Center',
+   categories:['Films'], interests:['Visual art'], keywords:['public art','documentary'], goals:['learn'], vibe:'big',
+   desc:"A documentary about artist Mierle Laderman Ukeles and her public art with New York City's Sanitation Department. The director attends."},
+  {id:'82542', short:'Job searching with young alumni', title:'Breaking the Mold: Job Searching with Young Alumni', day:4, start:570, end:630,
+   categories:['Free Food'], interests:[], keywords:['job search','alumni'], goals:['career'], vibe:'small',
+   desc:'Recent graduates share how they landed their first jobs. Co-hosted with the Center for Career Design.'},
+  {id:'82551', short:'Education careers panel', title:'Breaking the Mold: Career Panel for Educational Leadership', day:4, start:765, end:840,
+   categories:['Free Food'], interests:['Social impact'], keywords:['education','alumni panel'], goals:['career'], vibe:'small',
+   desc:'Three alumni talk about leading change in education.'},
+  {id:'82552', short:'Energy careers panel', title:'Breaking the Mold: Career Panel for Energy Transitions & Energy Justice', day:4, start:765, end:840,
+   categories:['Free Food'], interests:['Environment','Social impact'], keywords:['energy sector','energy justice'], goals:['career'], vibe:'small',
+   desc:'Three alumni talk about working in energy, from the energy transition to energy justice.'},
+  {id:'82445', short:'Is God Is', title:'Is God Is (DFS: Myths Revisited)', day:5, start:1140, end:1245,
+   categories:['Films'], interests:['Theater'], keywords:['play adaptation','thriller'], goals:['unwind'], vibe:'big',
+   desc:"A revenge thriller that playwright Aleshea Harris adapted from her own stage play, shown in the Dartmouth Film Society's Myths Revisited series."},
+  {id:'82446', short:'Broadway in HD: Fallen Angels', title:'Broadway in HD: Fallen Angels', day:6, start:960, end:1065, where:'Spaulding Auditorium',
+   categories:['Films'], interests:['Theater'], keywords:['Broadway','comedy'], goals:['unwind'], vibe:'big',
+   desc:"A filmed Broadway production of Noël Coward's comedy, shown on the big screen at the Hop."},
+  {id:'82604', short:'Conversations and Connections', title:'CONVERSATIONS AND CONNECTIONS', day:9, start:750, end:810,
+   categories:['Arts'], interests:['Visual art'], keywords:['artist','studio art'], goals:['learn','meet'], vibe:'small',
+   desc:'Studio art professor and artist Soo Sunny Park talks about her work.'},
+  {id:'82447', short:'Time Warp', title:'Time Warp', day:11, start:1140, end:1260,
+   categories:['Films'], interests:['Theater'], keywords:['documentary','drag theater'], goals:['unwind'], vibe:'big',
+   desc:'A documentary following a small-town drag troupe as it stages a live shadow cast of a cult movie musical.'},
+  {id:'82448', short:'My Neighbor Totoro', title:'My Neighbor Totoro (DFS: Myths Revisited)', day:13, start:960, end:1050,
+   categories:['Films'], interests:[], keywords:['animated','Miyazaki'], goals:['unwind'], vibe:'big',
+   desc:"Hayao Miyazaki's animated film about two sisters who meet a forest spirit, screened by the Dartmouth Film Society."},
+  {id:'thayer-bortoff', source:'thayer', url:'https://engineering.dartmouth.edu/events/dartmouth-autonomy-seminar-series-dr-scott-bortoff',
+   short:'Autonomy Seminar: heat pumps', title:'Dartmouth Autonomy Seminar', day:3, start:795, end:855, where:'Spanos Auditorium, Cummings Hall 100', host:'Dartmouth Autonomy Seminar',
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'seminar'}], areas:['Engineering','Environment & Energy'], interests:['Research','Environment'],
+   keywords:['systems control','heat pumps'], goals:['learn'], vibe:'big',
+   desc:"Scott Bortoff, chief scientist at Mitsubishi Electric Research Laboratories, talks about control systems for next-generation heat pumps."},
+  {id:'thayer-palmer', source:'thayer', url:'https://engineering.dartmouth.edu/events/phd-thesis-proposal-olivia-palmer',
+   short:'PhD proposal: macrophages', title:'PhD Thesis Proposal: Olivia Palmer', day:3, start:900, end:960, where:'ECSC B45, or online',
+   categories:[], areas:['Engineering','Life Sciences'], interests:['Research'], keywords:['thesis proposal','macrophage'], goals:['learn'], vibe:'small',
+   desc:'A PhD candidate lays out planned research on how sex hormones shape the fate and function of immune cells called macrophages.'},
+  {id:'thayer-gowie', source:'thayer', url:'https://engineering.dartmouth.edu/events/ms-thesis-defense-adrianne-gowie',
+   short:'MS defense: zinc implants', title:'MS Thesis Defense: Adrianne Gowie', day:10, start:480, end:540, where:'Jackson Conference Room, Cummings Hall 232, or online',
+   categories:[], areas:['Engineering','Health & Medicine'], interests:['Research'], keywords:['thesis defense','orthopedic implants'], goals:['learn'], vibe:'small',
+   desc:"A master's thesis defense on zinc alloys that dissolve safely in the body, for use in orthopedic implants."},
+  {id:'thayer-ai70', source:'thayer', url:'https://engineering.dartmouth.edu/events/ai-at-70-conference-what-must-remain-human',
+   short:'AI at 70 Conference', title:'AI at 70 Conference: “What Must Remain Human?”', day:10, endDay:11, allDay:true, where:'Dartmouth campus, or online',
+   categories:[], inferred:[{cat:'Lectures & Seminars', from:'conference'}], areas:['Computer Science & AI','Philosophy & Ethics'], interests:['Research'],
+   keywords:['artificial intelligence','limits of AI'], goals:['learn'], vibe:'big',
+   desc:'A two-day conference, 70 years after AI got its name at Dartmouth, where people from government, industry, and academia debate what AI should and should not take over.'}
+];
+// Academic areas for the Dartmouth Events Calendar listings above
+const AREA_OF = {
+  '82792':['Life Sciences','Health & Medicine'], '82626':['Life Sciences','Health & Medicine'], '82747':['Government & Law'],
+  '82798':['Art & Art History'], '82972':['Government & Law','Education'], '82941':['Life Sciences'], '82838':['Health & Medicine'],
+  '82991':['Film & Media'], '83021':['Environment & Energy'], '83057':['Engineering','Environment & Energy','Economics & Business'],
+  '82443':['Film & Media','Government & Law'], '83076':['Literature & Writing','Languages & Cultures'], '82821':['Literature & Writing'],
+  '82336':['Literature & Writing'], '82605':['Art & Art History','Film & Media'], '83054':['Health & Medicine','Government & Law'],
+  '82955':['Languages & Cultures'], '82444':['Film & Media','Art & Art History'], '82551':['Education'], '82552':['Environment & Energy'],
+  '82445':['Film & Media'], '82446':['Film & Media'], '82604':['Art & Art History'], '82447':['Film & Media','Critical Studies'], '82448':['Film & Media']
+};
+const EV = {};
+EVENTS.forEach(e => {
+  e.inferred = e.inferred || []; e.where = e.where || null; e.host = e.host || null; e.allDay = !!e.allDay;
+  e.areas = e.areas || AREA_OF[e.id] || []; e.source = e.source || 'events'; e.endDay = e.endDay === undefined ? e.day : e.endDay;
+  e.allCats = e.categories.concat(e.inferred.map(x => x.cat).filter(c => !e.categories.includes(c)));
+  EV[e.id] = e;
+});
+const BASE_BUSY = [];
+for (let d = FIRST_DAY; d <= LAST_DAY; d++) {
+  const wd = weekday(d);
+  CLASSES.forEach(c => { if (c.weekdays.includes(wd)) BASE_BUSY.push({kind:'class', layer:'classes', title:c.title, ref:c.title, where:c.room, day:d, start:c.start, end:c.end}); });
+  PERSONAL.forEach(p => { if (p.day === d || (p.day === undefined && p.weekday === wd)) BASE_BUSY.push({kind:'personal', layer:'personal', title:p.title, ref:p.ref, where:p.where, day:d, start:p.start, end:p.end}); });
+}
+
+/* ===== State ===== */
+function freshState() {
+  return {
+    tab:'website', view:'week', weekStart:weekOf(TODAY),
+    panel:'list', panelOpen:true, sidebar:window.innerWidth >= 1260, showPicks:true,
+    layers:{personal:true, classes:true, cairn:true},
+    connected:false, connecting:false,
+    cats:new Set(), areas:new Set(), intOff:new Set(),
+    goals:new Set(), topics:new Set(),
+    crowd:null, spare:null, trips:null,     // null = not answered yet
+    times:new Set(), perWeek:null, rated:{},
+    svPage:0, svDone:false, site:'welcome', editing:null, sampleIdx:0,
+    shown:[], added:new Set(), priority:new Set(), addEntries:new Map(), dismissed:new Set(),
+    fromHistory:[], showConflicts:false, selected:null,
+    justAdded:null, flashNew:null, entering:false, focusKey:null
+  };
+}
+let state = freshState();
+let toastTimer = null, toastUndo = null, savedListScroll = 0, pendingPanelScroll = null, lastPanelKey = '';
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ===== Helpers ===== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const when = e => e.day * 1440 + (e.allDay ? 0 : e.start);
+const isPast = e => (e.allDay ? e.endDay < TODAY : e.day * 1440 + e.start <= NOW);
+const occursOn = (e, d) => d >= e.day && d <= e.endDay;
+const overlaps = (a, b) => a.start < b.end && b.start < a.end;
+const toggle = (set, v) => { if (set.has(v)) set.delete(v); else set.add(v); };
+const lowerRest = arr => arr.map((x, i) => (i ? x.charAt(0).toLowerCase() + x.slice(1) : x));
+const titleOf = e => (state.priority.has(e.id) ? PRIORITY : '') + e.title;
+const shortOf = e => (state.priority.has(e.id) ? PRIORITY : '') + e.short;
+function listJoin(a, conj) {
+  const c = conj || 'and';
+  if (a.length <= 1) return a.join('');
+  if (a.length === 2) return a[0] + ' ' + c + ' ' + a[1];
+  return a.slice(0, -1).join(', ') + ', ' + c + ' ' + a[a.length - 1];
+}
+function fmtTime(m, withMer) {
+  const h = Math.floor(m / 60) % 24, mm = m % 60, h12 = h % 12 === 0 ? 12 : h % 12;
+  return h12 + ':' + String(mm).padStart(2, '0') + (withMer === false ? '' : (h >= 12 ? ' pm' : ' am'));
+}
+function fmtRange(s, e) {
+  const a = Math.floor(s / 60) % 24 >= 12, b = Math.floor(e / 60) % 24 >= 12;
+  return a === b ? fmtTime(s, false) + '–' + fmtTime(e) : fmtTime(s) + '–' + fmtTime(e);
+}
+function shortTime(m) {
+  const h = Math.floor(m / 60) % 24, mm = m % 60, h12 = h % 12 === 0 ? 12 : h % 12;
+  return h12 + (mm ? ':' + String(mm).padStart(2, '0') : '') + (h >= 12 ? 'p' : 'a');
+}
+const whenText = e => (e.endDay > e.day ? dayLabel(e.day) + ' – ' + dayLabel(e.endDay) + ', all day' : dayLabel(e.day) + ', ' + (e.allDay ? 'all day' : fmtRange(e.start, e.end)));
+const hourLabel = h => (h % 12 === 0 ? 12 : h % 12) + (h < 12 ? ' am' : ' pm');
+function durText(m) {
+  if (m % 60 === 0) return (m / 60) + (m === 60 ? ' hour' : ' hours');
+  if (m < 120) return m + ' minutes';
+  return String(Math.round(m / 6) / 10) + ' hours';
+}
+function timeBucket(e) {
+  if (e.allDay) return 'All day';
+  const wd = weekday(e.day);
+  if (wd <= 3 && e.start >= 1020) return 'Weeknights';
+  if ((wd === 4 && e.start >= 1020) || wd >= 5) return 'Weekends';
+  return 'Between classes';
+}
+const spareOf = id => SPARE.find(s => s.id === id);
+function panelRange() {
+  return state.view === 'week' ? [state.weekStart, state.weekStart + 6] : [TODAY, LAST_DAY];
+}
+
+/* ===== Profile + matching =====
+   Score = 4 per category chosen (organizer tags plus ones Evently adds from keywords) + 4 per academic area chosen + 3 per survey topic
+         + 2 per interest found on the calendar + 2 per goal the event serves (up to 2)
+         + 1 per tag shared with past, added, or "I'd go" events + 1 if it's at a time they like + 1 if the crowd size fits.
+   Minus: 1 per tag shared with "Not for me" examples, 1 for the wrong crowd size,
+          3 if it runs longer than they can spare. Off-campus events are dropped for "Stay on campus",
+          past events are skipped, and events that overlap the calendar are held back. */
+function profile() {
+  const interests = state.connected ? CAL_INTERESTS.filter(ci => !state.intOff.has(ci.interest)) : [];
+  const history = [];
+  if (state.connected) PAST.forEach(p => history.push(Object.assign({kind:'past', id:null}, p)));
+  SAMPLES.forEach(s => {
+    if (state.rated[s.id] === 'yes') history.push({kind:'sample', id:null, title:s.short, short:s.short, interests:s.interests, categories:s.categories});
+  });
+  state.added.forEach(id => {
+    const e = EV[id];
+    history.push({kind:'added', id:id, title:e.short, short:e.short, interests:e.interests, categories:e.allCats});
+  });
+  const avoid = new Set();
+  SAMPLES.forEach(s => { if (state.rated[s.id] === 'no') s.categories.concat(s.interests).forEach(t => avoid.add(t)); });
+  return {cats:state.cats, areas:state.areas, times:state.times, interests:interests, history:history, goals:state.goals, topics:state.topics,
+    crowd:state.crowd || 'any', spare:state.spare || 9999, trips:state.trips || 'yes', avoid:avoid};
+}
+function analyze(e, p) {
+  const survey = e.allCats.filter(c => p.cats.has(c));
+  const areas = e.areas.filter(x => p.areas.has(x));
+  const topics = e.interests.filter(i => p.topics.has(i));
+  const calendar = p.interests.filter(ci => e.interests.includes(ci.interest));
+  const goals = GOALS.filter(g => p.goals.has(g.id) && e.goals.includes(g.id));
+  const keys = new Set(), hist = [];
+  p.history.forEach(h => {
+    if (h.id === e.id) return;
+    const viaI = h.interests.filter(i => e.interests.includes(i));
+    const viaC = h.categories.filter(c => e.allCats.includes(c));
+    if (viaI.length || viaC.length) {
+      hist.push({h:h, viaI:viaI, viaC:viaC});
+      viaI.concat(viaC).forEach(k => keys.add(k));
+    }
+  });
+  const avoided = e.allCats.concat(e.interests).filter(t => p.avoid.has(t));
+  const bucket = timeBucket(e), timeOk = p.times.has(bucket);
+  const mins = e.allDay ? 1440 : e.end - e.start, tooLong = mins > p.spare;
+  const off = e.allCats.includes('Off Campus Event'), offBad = off && p.trips === 'no';
+  const crowdFit = p.crowd === 'any' ? 0 : (p.crowd === e.vibe ? 1 : -1);
+  const score = survey.length * 4 + areas.length * 4 + topics.length * 3 + calendar.length * 2 + Math.min(goals.length, 2) * 2 +
+    keys.size + (timeOk ? 1 : 0) + crowdFit - avoided.length - (tooLong ? 3 : 0) - (offBad ? 6 : 0);
+  const richness = [survey.length + areas.length, topics.length, calendar.length, goals.length, keys.size, timeOk ? 1 : 0].filter(Boolean).length;
+  return {survey, areas, topics, calendar, goals, hist, avoided, score, richness, bucket, timeOk, mins, tooLong, off, offBad, crowdFit};
+}
+function rankWith(p) {
+  const cache = new Map();
+  const A = e => { if (!cache.has(e.id)) cache.set(e.id, analyze(e, p)); return cache.get(e.id); };
+  return (x, y) => (A(y).score - A(x).score) || (A(y).richness - A(x).richness) || (when(x) - when(y));
+}
+function busyOn(day, exceptId) {
+  const list = BASE_BUSY.filter(b => b.day === day);
+  state.added.forEach(id => {
+    if (id === exceptId) return;
+    const a = EV[id];
+    if (a.day === day && !a.allDay) list.push({kind:'added', title:a.short, ref:a.short, day:a.day, start:a.start, end:a.end});
+  });
+  return list;
+}
+const conflictOf = e => (e.allDay ? [] : busyOn(e.day, e.id).filter(b => overlaps(b, e)));
+const baseConflictOf = e => (e.allDay ? [] : BASE_BUSY.filter(b => b.day === e.day && overlaps(b, e)));
+const strength = s => (s >= 9 ? 3 : s >= 5 ? 2 : 1);
+function pool(p, from, to) {
+  return EVENTS.filter(e => {
+    if (e.day < from || e.day > to || isPast(e)) return false;
+    if (state.added.has(e.id) || state.dismissed.has(e.id) || conflictOf(e).length) return false;
+    const a = analyze(e, p);
+    return !a.offBad && a.score >= MIN_SCORE;
+  });
+}
+function visibleIds(from, to) {
+  const s = new Set();
+  state.shown.concat(state.fromHistory.map(f => f.id)).forEach(id => { const d = EV[id].day; if (d >= from && d <= to) s.add(id); });
+  return s;
+}
+// Keep each week varied: a pick already chosen for the same category, topic, interest, goal,
+// or day counts against the next one, so one strong theme or one busy evening can't take every slot.
+function pickVaried(sorted, p, n) {
+  const chosen = [], used = {}, rest = sorted.slice();
+  const bump = k => { used[k] = (used[k] || 0) + 1; };
+  const u = k => used[k] || 0;
+  while (chosen.length < n && rest.length) {
+    let bi = 0, bs = -Infinity;
+    rest.forEach((e, i) => {
+      const a = analyze(e, p);
+      const s = a.score - a.survey.reduce((t, c) => t + u('c:' + c) * 2, 0) - a.areas.reduce((t, x) => t + u('a:' + x) * 2, 0) - a.topics.reduce((t, x) => t + u('t:' + x) * 2, 0) -
+        a.calendar.reduce((t, ci) => t + u('i:' + ci.interest) * 2, 0) - a.goals.reduce((t, g) => t + u('g:' + g.id), 0) - u('d:' + e.day) * 1.5;
+      if (s > bs) { bs = s; bi = i; }
+    });
+    const e = rest.splice(bi, 1)[0], a = analyze(e, p);
+    a.survey.forEach(c => bump('c:' + c)); a.areas.forEach(x => bump('a:' + x)); a.topics.forEach(x => bump('t:' + x));
+    a.calendar.forEach(ci => bump('i:' + ci.interest)); a.goals.forEach(g => bump('g:' + g.id)); bump('d:' + e.day);
+    chosen.push(e);
+  }
+  return chosen;
+}
+// Picks are chosen one week at a time, so "picks a week" means the same thing in week and month view.
+function buildList() {
+  const p = profile();
+  state.shown = [];
+  for (let ws = weekOf(TODAY); ws <= LAST_DAY; ws += 7) {
+    const we = Math.min(ws + 6, LAST_DAY);
+    const pinned = EVENTS.filter(e => state.added.has(e.id) && e.day >= ws && e.day <= we).map(e => e.id);
+    const slots = Math.max(0, (state.perWeek || 5) - pinned.length);
+    state.shown = state.shown.concat(pinned, pickVaried(pool(p, ws, we).sort(rankWith(p)), p, slots).map(e => e.id));
+  }
+  state.fromHistory = [];
+  state.showConflicts = false;
+}
+function nextBest(p, e) {
+  const ws = weekOf(e.day), vis = visibleIds(ws, ws + 6);
+  return pool(p, ws, ws + 6).filter(x => !vis.has(x.id)).sort(rankWith(p))[0] || null;
+}
+function hiddenConflicts(p, from, to) {
+  const vis = visibleIds(from, to);
+  return EVENTS.filter(e => {
+    if (e.day < from || e.day > to || isPast(e)) return false;
+    if (vis.has(e.id) || state.added.has(e.id) || state.dismissed.has(e.id) || !baseConflictOf(e).length) return false;
+    const a = analyze(e, p);
+    return !a.offBad && a.score >= 4;
+  }).sort((a, b) => when(a) - when(b));
+}
+function scheduleFit(e) {
+  if (e.allDay) return {text:(e.endDay > e.day ? 'It runs for ' + (e.endDay - e.day + 1) + ' days' : 'It runs all day') + ", so you can stop by whenever you're free."};
+  const list = busyOn(e.day, e.id);
+  const hit = list.filter(b => overlaps(b, e));
+  if (hit.length) return {conflict:true, text:'Overlaps ' + hit[0].ref + ' (' + fmtRange(hit[0].start, hit[0].end) + ').'};
+  const before = list.filter(b => b.end <= e.start).sort((a, b) => b.end - a.end)[0];
+  const after = list.filter(b => b.start >= e.end).sort((a, b) => a.start - b.start)[0];
+  if (before && after) return {text:'Fits between ' + before.ref + ' and ' + after.ref + '.'};
+  if (before) return {text:"You're free after " + before.ref + ' ends at ' + fmtTime(before.end) + '.'};
+  if (after) return {text:"You're free until " + after.ref + ' at ' + fmtTime(after.start) + '.'};
+  return {text:'Nothing else is on your calendar that day.'};
+}
+const histVerb = h => (h.kind === 'added' ? 'added ' + h.short : h.kind === 'sample' ? "said you'd go to " + h.short : 'went to ' + h.short);
+function histLine(m) {
+  const h = m.h;
+  const base = h.kind === 'added' ? 'You added ' + h.short : h.kind === 'sample' ? "You said you'd go to " + h.short : 'You went to ' + h.title + ' on ' + h.date;
+  return m.viaI.length ? base + '.' : base + ', which was also tagged ' + listJoin(m.viaC) + '.';
+}
+function shortWhy(e, a) {
+  const ps = [], covered = new Set();
+  if (a.survey.length) ps.push('picked ' + a.survey[0]);
+  if (a.areas.length && ps.length < 2) ps.push('follow ' + a.areas[0]);
+  if (a.topics.length && ps.length < 2) ps.push('are curious about ' + LOWER[a.topics[0]]);
+  a.calendar.forEach(ci => { if (ps.length < 2) { ps.push(ci.verb); covered.add(ci.interest); } });
+  if (a.goals.length && ps.length < 2) ps.push(a.goals[0].short);
+  a.hist.forEach(m => {
+    if (ps.length >= 2) return;
+    const fresh = m.viaI.some(i => !covered.has(i)) || (m.h.kind !== 'past' && m.viaC.some(c => !a.survey.includes(c)));
+    if (fresh) ps.push(histVerb(m.h));
+  });
+  if (!ps.length) return a.timeOk ? TIME_PHRASE[a.bucket] : 'It fits your free time.';
+  const both = ps.length === 2 && ps[0].indexOf('take ') === 0 && ps[1].indexOf('take ') === 0;
+  const s = 'Because you ' + (both ? 'take ' + ps[0].slice(5) + ' and ' + ps[1].slice(5) : ps.join(' and ')) + '.';
+  return s.replace(/^Because you are /, "Because you're ");
+}
+function whyRows(e, a, p) {
+  const out = [];
+  if (a.survey.length) out.push({k:'ok', t:'You picked ' + listJoin(a.survey) + '.'});
+  if (a.areas.length) out.push({k:'ok', t:'You follow ' + listJoin(a.areas) + '.'});
+  if (a.topics.length) out.push({k:'ok', t:"You're curious about " + listJoin(a.topics.map(t => LOWER[t])) + '.'});
+  if (a.goals.length) out.push({k:'ok', t:'You want to ' + listJoin(a.goals.map(g => g.why)) + '.'});
+  a.calendar.forEach(ci => out.push({k:'ok', t:'You ' + ci.verb + '.'}));
+  a.hist.slice(0, 2).forEach(m => {
+    const h = m.h;
+    out.push({k:'ok', t:(h.kind === 'added' ? 'You added ' + h.short : h.kind === 'sample' ? "You said you'd go to " + h.short : 'You went to ' + h.title + ' on ' + h.date) + '.'});
+  });
+  if (a.tooLong) out.push({k:'warn', t:(e.allDay ? "It's an all-day event" : 'It runs ' + durText(a.mins)) + ', longer than you usually have.'});
+  if (p.crowd !== 'any') out.push(a.crowdFit > 0 ? {k:'ok', t:"It's " + VIBE[e.vibe] + ', which you prefer.'}
+    : {k:'warn', t:"It's " + VIBE[e.vibe] + ', and you prefer ' + (p.crowd === 'small' ? 'small groups' : 'big crowds') + '.'});
+  if (a.offBad) out.push({k:'warn', t:"It's off campus."});
+  const fit = scheduleFit(e);
+  out.push({k:fit.conflict ? 'warn' : 'time', t:fit.text});
+  return out;
+}
+function keywordLine(e) {
+  const kws = listJoin(e.keywords.map(k => '“' + k + '”'));
+  return e.interests.length ? kws + ' point to ' + listJoin(e.interests.map(i => LOWER[i] || i.toLowerCase())) + '.' : kws + " back up the organizer's tags.";
+}
+
+/* ===== Profile summaries (setup page) ===== */
+function styleText() {
+  const parts = [];
+  if (state.crowd) parts.push({small:'small groups', big:'big crowds', any:'any size crowd'}[state.crowd]);
+  if (state.spare) parts.push({60:'up to 1 hour', 120:'up to 2 hours', 9999:'half a day or more'}[state.spare]);
+  if (state.trips) parts.push(state.trips === 'yes' ? 'trips are fine' : 'on campus only');
+  if (!parts.length) return null;
+  const t = parts.join(', ');
+  return t.charAt(0).toUpperCase() + t.slice(1) + '.';
+}
+function timingText() {
+  const t = lowerRest(TIMES.filter(x => state.times.has(x)));
+  if (!t.length && !state.perWeek) return null;
+  return (t.length ? listJoin(t) : 'Any time') + (state.perWeek ? ', ' + state.perWeek + ' picks a week.' : '.');
+}
+function tasteText() {
+  const yes = SAMPLES.filter(s => state.rated[s.id] === 'yes').map(s => s.short);
+  const no = SAMPLES.filter(s => state.rated[s.id] === 'no').map(s => s.short);
+  if (yes.length && no.length) return "You'd go to " + listJoin(yes) + ', but not ' + listJoin(no, 'or') + '.';
+  if (yes.length) return "You'd go to " + listJoin(yes) + '.';
+  if (no.length) return "You'd skip " + listJoin(no) + '.';
+  return null;
+}
+
+/* ===== Icons (all original) ===== */
+const svg = (w, vb, body, cls) => '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="' + w + '" height="' + w + '" viewBox="' + vb + '" aria-hidden="true" focusable="false">' + body + '</svg>';
+const CHECK = '<path d="M4 10.5l3.8 3.8L16 6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="';
+const SK = ' fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"';
+const ICON = {
+  mark: svg(22, '0 0 24 24', '<rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="currentColor"/><path d="M7.5 8h9M7.5 12h6M7.5 16h9" style="stroke:var(--on-pine)" stroke-width="2.2" stroke-linecap="round"/>', 'mark'),
+  alert: svg(16, '0 0 20 20', '<circle cx="10" cy="10" r="7.5"' + SK + ' stroke-width="1.8"/><path d="M10 6.2v4.6"' + SK + ' stroke-width="2"/><circle cx="10" cy="13.8" r="1.1" fill="currentColor"/>'),
+  check: svg(18, '0 0 20 20', CHECK + '2.2"/>'),
+  ck: svg(14, '0 0 20 20', CHECK + '2.6"/>', 'ck'),
+  tiny: svg(11, '0 0 20 20', CHECK + '3"/>', 'tiny'),
+  cal: svg(18, '0 0 20 20', '<rect x="2.5" y="4" width="15" height="13.5" rx="2.5"' + SK + ' stroke-width="1.8"/><path d="M2.5 8.5h15M6.5 2.5v3M13.5 2.5v3"' + SK + ' stroke-width="1.8"/>'),
+  browser: svg(18, '0 0 20 20', '<rect x="2.5" y="3.5" width="15" height="13" rx="2.5"' + SK + ' stroke-width="1.8"/><path d="M2.5 7.5h15"' + SK + ' stroke-width="1.8"/><circle cx="5.2" cy="5.5" r=".9" fill="currentColor"/><circle cx="7.6" cy="5.5" r=".9" fill="currentColor"/>'),
+  close: svg(18, '0 0 20 20', '<path d="M5 5l10 10M15 5L5 15"' + SK + ' stroke-width="2"/>'),
+  back: svg(18, '0 0 20 20', '<path d="M12.5 4.5L7 10l5.5 5.5"' + SK + ' stroke-width="2"/>'),
+  chevL: svg(18, '0 0 20 20', '<path d="M12.5 4.5L7 10l5.5 5.5"' + SK + ' stroke-width="2"/>'),
+  chevR: svg(18, '0 0 20 20', '<path d="M7.5 4.5L13 10l-5.5 5.5"' + SK + ' stroke-width="2"/>'),
+  menu: svg(20, '0 0 20 20', '<path d="M3 5.5h14M3 10h14M3 14.5h14"' + SK + ' stroke-width="1.9"/>'),
+  search: svg(20, '0 0 20 20', '<circle cx="8.5" cy="8.5" r="5.2"' + SK + ' stroke-width="1.9"/><path d="M12.6 12.6L17 17"' + SK + ' stroke-width="1.9"/>'),
+  help: svg(20, '0 0 20 20', '<circle cx="10" cy="10" r="7.6"' + SK + ' stroke-width="1.8"/><path d="M7.9 7.8a2.2 2.2 0 114.1 1.1c-.6.9-2 1.2-2 2.6"' + SK + ' stroke-width="1.8"/><circle cx="10" cy="14.2" r="1.05" fill="currentColor"/>'),
+  gear: svg(20, '0 0 20 20', '<circle cx="10" cy="10" r="6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-dasharray="2.4 2.31"/><circle cx="10" cy="10" r="4.4"' + SK + ' stroke-width="1.8"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/>'),
+  plus: svg(18, '0 0 20 20', '<path d="M10 4v12M4 10h12"' + SK + ' stroke-width="2.2"/>'),
+  ext: svg(14, '0 0 20 20', '<path d="M8.5 4.5h-4a1.5 1.5 0 00-1.5 1.5v9.5A1.5 1.5 0 004.5 17H14a1.5 1.5 0 001.5-1.5v-4M11.5 3H17v5.5M17 3l-7.5 7.5"' + SK + ' stroke-width="1.9"/>'),
+  calApp: svg(26, '0 0 26 26', '<rect x="3" y="5" width="20" height="18" rx="4" fill="currentColor"/><rect x="5.5" y="10.5" width="15" height="10" rx="1.6" style="fill:var(--h-bg)"/><path d="M8.5 3v4M17.5 3v4"' + SK + ' stroke-width="2.2"/><path d="M8 13.5h2.4M11.8 13.5h2.4M15.6 13.5h2.4M8 17h2.4M11.8 17h2.4"' + SK + ' stroke-width="2"/>'),
+  clock: svg(16, '0 0 20 20', '<circle cx="10" cy="10" r="7.5"' + SK + ' stroke-width="1.8"/><path d="M10 5.8V10l3 2"' + SK + ' stroke-width="1.8"/>'),
+  pin: svg(16, '0 0 20 20', '<path d="M10 18s5.5-5.2 5.5-9.5a5.5 5.5 0 10-11 0C4.5 12.8 10 18 10 18z"' + SK + ' stroke-width="1.8"/><circle cx="10" cy="8.5" r="2" fill="currentColor"/>'),
+  host: svg(16, '0 0 20 20', '<circle cx="7.5" cy="7" r="2.8"' + SK + ' stroke-width="1.8"/><path d="M2.5 16.5c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M13 4.6a2.6 2.6 0 010 5M14.5 12.3c1.6.6 2.6 2 3 4.2"' + SK + ' stroke-width="1.8"/>')
+};
+// Match strength drawn as a little cairn: more stones, stronger match.
+function cairn(st, mode) {
+  const on = mode === 'added' ? 'var(--pine)' : mode === 'conflict' ? 'var(--maple)' : 'var(--gold-strong)';
+  const f = n => (st >= n ? on : 'var(--line-strong)');
+  return '<svg class="mini-cairn" width="20" height="24" viewBox="0 0 20 24" aria-hidden="true" focusable="false">' +
+    '<ellipse cx="10" cy="20" rx="8.2" ry="3.2" style="fill:' + f(1) + '"/>' +
+    '<ellipse cx="10.6" cy="13.7" rx="5.8" ry="2.7" style="fill:' + f(2) + '"/>' +
+    '<ellipse cx="9.6" cy="8.3" rx="3.5" ry="2.1" style="fill:' + f(3) + '"/></svg>';
+}
+
+/* ===== Prototype tabs ===== */
+const TABS = [
+  {id:'website', label:'Website', icon:'browser', cap:'The setup site, where students connect their calendar, pick categories, and answer a short survey.'},
+  {id:'calendar', label:'Calendar view', icon:'cal', cap:"The student's calendar with " + APP + "'s side panel. Open any pick to see why it matched."}
+];
+function tabsHTML() {
+  return TABS.map(t => '<li><button type="button" class="tab-btn" data-action="tab" data-tab="' + t.id + '" data-key="tab:' + t.id + '"' +
+    (state.tab === t.id ? ' aria-current="page"' : '') + '>' + ICON[t.icon] + t.label + '</button></li>').join('');
+}
+
+/* ===== Website: welcome, onboarding, preferences ===== */
+const SPARE_STEPS = [30, 60, 120, 180, 9999];
+const SPARE_LABEL = {30:'30 minutes', 60:'1 hour', 120:'2 hours', 180:'3 hours', 9999:'Any length'};
+const GOAL_SUB = {meet:'Socials, mixers, and club nights', career:'Panels, info sessions, and alumni chats', learn:'Talks, workshops, and screenings',
+  unwind:'Performances, films, and food', club:'Open meetings and groups looking for members'};
+const TIME_SUB = {'Between classes':'Daytime gaps on weekdays', 'Weeknights':'Monday to Thursday, after 5 pm', 'Weekends':'Friday night through Sunday'};
+const QUESTIONS = [
+  {id:'cats', q:'What are you into?', hint:'Pick as many as you like.'},
+  {id:'areas', q:'Any academic interests?', hint:"We'll look for talks and seminars in these fields."},
+  {id:'goals', q:'What are you looking for?', hint:'Choose up to three.'},
+  {id:'topics', q:'What else are you curious about?', hint:"The things your classes don't show."},
+  {id:'style', q:'Your event preferences', hint:'You can change these anytime.'},
+  {id:'timing', q:'When are you usually free?', hint:'We only suggest events in your open time. This decides which ones come first.'},
+  {id:'taste', q:'Would you go?', hint:'A few real events from earlier this month.'},
+  {id:'calint', q:'Interests from your calendar', hint:"Turn off anything you don't want us to use."}
+];
+const FLOW = [0, 1, 2, 3, 4, 5, 6];   // "Interests from your calendar" is only edited from preferences
+const pill = (act, val, on) => '<button type="button" class="pill" data-action="' + act + '" data-val="' + esc(val) + '" data-key="' + act + ':' + esc(val) + '" aria-pressed="' + on + '"' +
+  (AREA_HINT[val] ? ' title="' + esc(AREA_HINT[val]) + '"' : '') + '>' + esc(val) + '</button>';
+const pills = (act, list, set) => '<div class="pills">' + list.map(x => pill(act, x, set.has(x))).join('') + '</div>' +
+  (set.size ? '<p class="ob-count">' + set.size + ' selected</p>' : '');
+function optRow(act, val, title, sub, on, disabled) {
+  return '<button type="button" class="opt" data-action="' + act + '" data-val="' + esc(val) + '" data-key="' + act + ':' + esc(val) + '" aria-pressed="' + on + '"' + (disabled ? ' disabled' : '') + '>' +
+    '<span class="opt-text"><b>' + esc(title) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span><span class="opt-box" aria-hidden="true">' + ICON.check + '</span></button>';
+}
+function switchRow(act, val, title, sub, on) {
+  return '<div class="srow"><span class="srow-text"><b>' + esc(title) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</span>' +
+    '<button type="button" class="tgl" role="switch" aria-checked="' + on + '" aria-label="' + esc(title) + '" data-action="' + act + '" data-val="' + esc(val) + '" data-key="' + act + ':' + esc(val) + '"><span class="tgl-knob"></span></button></div>';
+}
+function sliderRow(name, title, min, max, val, label) {
+  return '<div class="srow col"><div class="srow-head"><label for="rng-' + name + '"><b>' + title + '</b></label><span class="srow-val" id="val-' + name + '">' + esc(label) + '</span></div>' +
+    '<input type="range" class="rng" id="rng-' + name + '" name="' + name + '" min="' + min + '" max="' + max + '" step="1" value="' + val + '" data-key="rng:' + name + '" aria-valuetext="' + esc(label) + '"></div>';
+}
+function questionBody(id) {
+  if (id === 'cats') return pills('cat', CATEGORIES, state.cats);
+  if (id === 'areas') return pills('area', AREAS, state.areas);
+  if (id === 'topics') return pills('topic', TOPICS, state.topics);
+  if (id === 'goals') return '<div class="opts">' + GOALS.map(g => optRow('goal', g.id, g.label, GOAL_SUB[g.id], state.goals.has(g.id), !state.goals.has(g.id) && state.goals.size >= 3)).join('') + '</div>' +
+    (state.goals.size ? '<p class="ob-count">' + state.goals.size + ' of 3 selected</p>' : '');
+  if (id === 'style') {
+    const si = state.spare ? SPARE_STEPS.indexOf(state.spare) : SPARE_STEPS.length - 1;
+    return '<div class="sgroup"><fieldset class="srow col"><legend><b>Crowd size</b></legend><div class="seg2">' +
+      [{id:'small', label:'Small groups'}, {id:'any', label:'Either'}, {id:'big', label:'Big crowds'}].map(o =>
+        '<label><input type="radio" name="crowd" value="' + o.id + '" data-key="crowd:' + o.id + '"' + (state.crowd === o.id ? ' checked' : '') + '><span>' + o.label + '</span></label>').join('') + '</div></fieldset>' +
+      sliderRow('spare', 'Time you can spare', 0, SPARE_STEPS.length - 1, si, SPARE_LABEL[SPARE_STEPS[si]]) +
+      switchRow('campus', 'campus', 'On campus only', 'Hide events that leave campus', state.trips === 'no') + '</div>';
+  }
+  if (id === 'timing') return '<div class="opts">' + TIMES.map(t => optRow('time', t, t, TIME_SUB[t], state.times.has(t))).join('') + '</div>' +
+    '<div class="sgroup">' + sliderRow('per', 'Picks a week', 1, 10, state.perWeek || 5, (state.perWeek || 5) + ' picks') + '</div>';
+  if (id === 'taste') return tasteStack();
+  return '<div class="sgroup">' + CAL_INTERESTS.map(ci => switchRow('int', ci.interest, ci.interest, 'From ' + ci.from, !state.intOff.has(ci.interest))).join('') + '</div>';
+}
+function tasteStack() {
+  const i = state.sampleIdx;
+  const dots = '<div class="dots" aria-hidden="true">' + SAMPLES.map((s, k) => '<span class="' + (state.rated[s.id] === 'yes' ? 'y' : state.rated[s.id] === 'no' ? 'n' : k === i ? 'cur' : '') + '"></span>').join('') + '</div>';
+  if (i >= SAMPLES.length) {
+    const yes = SAMPLES.filter(s => state.rated[s.id] === 'yes').length;
+    return '<div class="card-done"><p class="cd-big">' + (yes ? "You'd go to " + yes + ' of ' + SAMPLES.length + '.' : 'None of these were for you.') + '</p>' +
+      '<p class="muted">That helps us learn your taste.</p><button type="button" class="link" data-action="rate-reset" data-key="rate-reset">Start over</button></div>' + dots;
+  }
+  const s = SAMPLES[i];
+  return '<div class="stack"><article class="ecard" tabindex="-1" data-key="ecard" aria-label="' + esc(s.title) + '"><p class="ecard-when">' + esc(s.when) + '</p>' +
+    '<h2 class="ecard-title">' + esc(s.title) + '</h2><p class="ecard-blurb">' + esc(s.blurb) + '</p></article>' +
+    '<div class="ecard-actions"><button type="button" class="round no" data-action="rate" data-id="' + s.id + '" data-val="no" data-key="rate:no" aria-label="Not for me">' + ICON.close + '</button>' +
+    '<button type="button" class="round yes" data-action="rate" data-id="' + s.id + '" data-val="yes" data-key="rate:yes" aria-label="I&#39;d go">' + ICON.check + '</button></div>' +
+    '<div class="ecard-labels" aria-hidden="true"><span>Not for me</span><span>I&#39;d go</span></div></div>' + dots;
+}
+function surveyHTML() {
+  const editing = state.editing !== null;
+  const qi = editing ? state.editing : FLOW[state.svPage], Q = QUESTIONS[qi];
+  const pos = FLOW.indexOf(qi), n = FLOW.length, last = !editing && pos === n - 1;
+  const head = editing
+    ? '<div class="ob-head"><button type="button" class="ob-back" data-action="edit-close" data-key="edit-close">' + ICON.back + 'Preferences</button></div>'
+    : '<div class="ob-head"><button type="button" class="ob-icon" data-action="sv-back" data-key="sv-back" aria-label="Back">' + ICON.back + '</button>' +
+      '<div class="ob-progress" role="progressbar" aria-label="Setup progress" aria-valuemin="1" aria-valuemax="' + n + '" aria-valuenow="' + (pos + 1) + '"><span style="width:' + ((pos + 1) / n * 100) + '%"></span></div>' +
+      '<button type="button" class="ob-skip" data-action="sv-skip" data-key="sv-skip">Skip</button></div>';
+  const foot = editing
+    ? '<div class="ob-foot"><button type="button" class="btn btn-primary btn-lg" data-action="edit-close" data-key="edit-done">Done</button></div>'
+    : '<div class="ob-foot">' + (last ? '' : '<button type="button" class="btn btn-lg ob-finish" data-action="sv-finish" data-key="sv-finish">Finish</button>') +
+      '<button type="button" class="btn btn-primary btn-lg" data-action="' + (last ? 'sv-finish' : 'sv-next') + '" data-key="' + (last ? 'sv-finish' : 'sv-next') + '">' + (last ? 'Finish' : 'Next') + '</button></div>';
+  return '<div class="ob">' + head + '<div class="ob-body"><h1 class="ob-q" tabindex="-1" data-key="obq">' + Q.q + '</h1><p class="ob-hint">' + Q.hint + '</p>' + questionBody(Q.id) + '</div>' + foot + '</div>';
+}
+function welcomeHTML() {
+  const c = state.connected;
+  return '<div class="welcome"><p class="wordmark">' + ICON.mark + APP + '</p>' +
+    '<h1 class="w-title" tabindex="-1" data-key="w-title">Dartmouth events, picked for your week.</h1>' +
+    '<p class="w-lede">Connect your calendar and tell us what you like. We suggest events that fit your free time, and nothing goes on your calendar unless you add it.</p>' +
+    (c ? '<div class="w-connected" tabindex="-1" data-key="connected">' + ICON.check + '<div><b>Connected as ' + EMAIL + '</b><small>Found 3 classes and 3 other events this week.</small></div></div>' +
+         '<button type="button" class="btn btn-primary btn-lg w-cta" data-action="start" data-key="start">Get started</button>'
+       : '<button type="button" class="btn btn-primary btn-lg w-cta" data-action="connect" data-key="connect"' + (state.connecting ? ' disabled' : '') + '>' + ICON.cal +
+         (state.connecting ? 'Connecting…' : 'Continue with Google Calendar') + '</button><p class="w-fine">We only read your calendar to find your free time and interests.</p>') + '</div>';
+}
+function prefRow(title, value, q) {
+  return '<button type="button" class="prow" data-action="edit-q" data-q="' + q + '" data-key="prow:' + esc(title) + '"><span class="prow-text"><b>' + esc(title) + '</b>' +
+    '<small' + (value ? '' : ' class="unset"') + '>' + esc(value || 'Not set') + '</small></span>' + ICON.chevR + '</button>';
+}
+function prefsHTML() {
+  const sentence = arr => (arr.length ? listJoin(lowerRest(arr)) : null);
+  const calOn = CAL_INTERESTS.filter(ci => !state.intOff.has(ci.interest)).map(ci => ci.interest);
+  const rated = SAMPLES.filter(s => state.rated[s.id]).length, yes = SAMPLES.filter(s => state.rated[s.id] === 'yes').length;
+  const group = (title, rows) => '<section class="pgrp"><h2>' + title + '</h2><div class="pgrp-list">' + rows + '</div></section>';
+  const been = PAST.map(h => '<div class="prow"><span class="prow-text"><b>' + esc(h.title) + '</b><small>' + esc(h.date) + '</small></span></div>').join('') +
+    EVENTS.filter(e => state.added.has(e.id)).map(e => '<div class="prow"><span class="prow-text"><b>' + esc(titleOf(e)) + '</b><small>Added for ' + esc(dayLabel(e.day)) + '</small></span></div>').join('');
+  return '<div class="prefs"><div class="prefs-head"><div><h1 class="prefs-title" tabindex="-1" data-key="prefs-title">Your preferences</h1>' +
+      '<p class="prefs-sub">' + APP + ' uses these to choose your picks.</p></div>' +
+      '<button type="button" class="btn btn-primary btn-lg" data-action="see" data-key="see">See my picks</button></div>' +
+    group('Calendar', '<div class="prow"><span class="prow-text"><b>Google Calendar</b><small>' + EMAIL + '</small></span><span class="ok-pill">Connected</span></div>' +
+      prefRow('Interests from your classes', calOn.length ? listJoin(calOn) : 'None', 7)) +
+    group('Interests', prefRow('Categories', state.cats.size ? listJoin(CATEGORIES.filter(x => state.cats.has(x))) : null, 0) +
+      prefRow('Academic interests', state.areas.size ? listJoin(AREAS.filter(x => state.areas.has(x))) : null, 1) +
+      prefRow('Topics', sentence(TOPICS.filter(t => state.topics.has(t))), 3)) +
+    group('What you’re looking for', prefRow('Goals', sentence(GOALS.filter(g => state.goals.has(g.id)).map(g => g.label)), 2)) +
+    group('Event preferences', prefRow('Crowd size', state.crowd ? {small:'Small groups', any:'Either', big:'Big crowds'}[state.crowd] : null, 4) +
+      prefRow('Time you can spare', state.spare ? SPARE_LABEL[state.spare] : null, 4) + prefRow('On campus only', state.trips === 'no' ? 'On' : 'Off', 4)) +
+    group('Timing', prefRow('When you’re free', sentence(TIMES.filter(t => state.times.has(t))), 5) + prefRow('Picks a week', String(state.perWeek || 5), 5)) +
+    group('Taste', prefRow('Sample events', rated ? "You'd go to " + yes + ' of ' + rated : null, 6)) +
+    group('Events you’ve been to', been) + '</div>';
+}
+function siteHTML() { return state.site === 'welcome' ? welcomeHTML() : state.site === 'survey' ? surveyHTML() : prefsHTML(); }
+
+/* ===== Calendar view: the calendar app around the extension ===== */
+const INERT = ' aria-hidden="true" title="Not part of this prototype"';
+function topbarHTML() {
+  const wk = state.view === 'week';
+  const prevOff = !wk || state.weekStart - 7 < weekOf(FIRST_DAY);
+  const nextOff = !wk || state.weekStart + 7 > LAST_DAY;
+  return '<div class="h-top">' +
+    '<button type="button" class="h-icon" data-action="sidebar" data-key="sidebar" aria-label="Main menu" aria-expanded="' + state.sidebar + '">' + ICON.menu + '</button>' +
+    '<div class="h-app">' + ICON.calApp + '<span>Calendar</span></div>' +
+    '<button type="button" class="h-pill" data-action="today" data-key="today">Today</button>' +
+    '<span class="h-arrows"' + (wk ? '' : ' title="Only October 2026 is in this prototype"') + '>' +
+      '<button type="button" data-action="prev" data-key="prev" aria-label="Previous week"' + (prevOff ? ' disabled' : '') + '>' + ICON.chevL + '</button>' +
+      '<button type="button" data-action="next" data-key="next" aria-label="Next week"' + (nextOff ? ' disabled' : '') + '>' + ICON.chevR + '</button></span>' +
+    '<h2 class="h-range">' + (wk ? rangeLabel(state.weekStart, state.weekStart + 6) : 'October 2026') + '</h2><span class="h-spacer"></span>' +
+    '<button type="button" class="h-switch" role="switch" aria-checked="' + state.showPicks + '" data-action="toggle-picks" data-key="toggle-picks">' +
+      '<span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span>Suggestions</button>' +
+    '<span class="h-tools"' + INERT + '>' + ICON.search + ICON.help + ICON.gear + '</span>' +
+    '<span class="h-seg" role="group" aria-label="Calendar view"><span class="inert"' + INERT + '>Day</span>' +
+      '<button type="button" data-action="view" data-view="week" data-key="view:week" aria-pressed="' + wk + '">Week</button>' +
+      '<button type="button" data-action="view" data-view="month" data-key="view:month" aria-pressed="' + !wk + '">Month</button></span>' +
+    '<span class="h-avatar" role="img" aria-label="Signed in as ' + USER + '">' + USER.charAt(0) + '</span></div>';
+}
+function sidebarHTML() {
+  const ws = state.view === 'week' ? state.weekStart : null;
+  let mini = '';
+  for (let d = FIRST_DAY; d <= LAST_DAY; d++) {
+    const cls = ['mini-d'];
+    if (dateOf(d).getMonth() !== 9) cls.push('out');
+    if (ws !== null && d >= ws && d <= ws + 6) { cls.push('wk'); if (d === ws) cls.push('wk-s'); if (d === ws + 6) cls.push('wk-e'); }
+    if (d === TODAY) cls.push('today');
+    mini += '<button type="button" class="' + cls.join(' ') + '" data-action="goto-day" data-day="' + d + '" data-key="mini:' + d + '" aria-label="' +
+      esc('Show the week of ' + dayLabel(weekOf(d))) + '"><span>' + dayNum(d) + '</span></button>';
+  }
+  const cals = [
+    {id:'personal', label:USER, color:'var(--personal-bar)'},
+    {id:'classes', label:'Classes', color:'var(--class-bar)'},
+    {id:'cairn', label:APP + ' (added events)', color:'var(--pine)'}
+  ];
+  return '<nav class="h-side" aria-label="Calendar sidebar">' +
+    '<span class="h-new"' + INERT + '>' + ICON.plus + 'New event</span>' +
+    '<div class="mini"><div class="mini-head"><span>October 2026</span></div><div class="mini-grid">' +
+      WD.map(d => '<span class="mini-dow" aria-hidden="true">' + d.charAt(0) + '</span>').join('') + mini + '</div></div>' +
+    '<h3 class="h-sh" id="mycals">My calendars</h3><ul class="h-cals" aria-labelledby="mycals">' + cals.map(c =>
+      '<li><label><input type="checkbox" data-layer="' + c.id + '" data-key="layer:' + c.id + '"' + (state.layers[c.id] ? ' checked' : '') + ' style="accent-color:' + c.color + '"><span>' + esc(c.label) + '</span></label></li>').join('') +
+      '<li><label><input type="checkbox" data-picks="1" data-key="layer:picks"' + (state.showPicks ? ' checked' : '') + ' style="accent-color:var(--gold-strong)"><span>' + APP + ' suggestions</span></label></li>' +
+    '</ul></nav>';
+}
+function layoutDay(items) {
+  items.sort((a, b) => a.start - b.start || b.end - a.end);
+  let cluster = [], end = -1;
+  const flush = () => {
+    const cols = [];
+    cluster.forEach(it => {
+      let c = cols.findIndex(colEnd => it.start >= colEnd);
+      if (c === -1) { c = cols.length; cols.push(it.end); } else cols[c] = it.end;
+      it.col = c;
+    });
+    cluster.forEach(it => { it.ncol = cols.length; });
+    cluster = []; end = -1;
+  };
+  items.forEach(it => { if (cluster.length && it.start >= end) flush(); cluster.push(it); end = Math.max(end, it.end); });
+  if (cluster.length) flush();
+}
+// Evently's items for a date range: events on the Evently calendar, plus suggestions when the switch is on.
+function cairnItems(p, from, to, withConflicts) {
+  const out = [], seen = new Set();
+  const push = (id, kind) => { if (!seen.has(id) && EV[id].day <= to && EV[id].endDay >= from) { seen.add(id); out.push({id:id, kind:kind}); } };
+  if (state.layers.cairn) state.added.forEach(id => push(id, 'added'));
+  if (state.showPicks) {
+    state.shown.forEach(id => { if (!state.added.has(id)) push(id, 'pick'); });
+    state.fromHistory.forEach(f => { if (!state.added.has(f.id)) push(f.id, 'pick'); });
+    if (withConflicts && state.showConflicts) hiddenConflicts(p, from, to).forEach(e => push(e.id, 'conflict'));
+  }
+  out.sort((a, b) => when(EV[a.id]) - when(EV[b.id]));
+  out.forEach((o, i) => { o.i = i; });
+  return out;
+}
+function cairnCls(e, kind) {
+  const cls = [kind];
+  if (state.selected === e.id && state.panel === 'detail' && state.panelOpen) cls.push('sel');
+  if (kind === 'added' && state.justAdded === e.id) cls.push('just');
+  if (kind !== 'added' && (state.entering || state.flashNew === e.id)) cls.push('enter');
+  return cls;
+}
+function blockHTML(it) {
+  const top = (it.start - DAY_START) / 60 * HOUR;
+  const h = Math.max((it.end - it.start) / 60 * HOUR, 18);
+  const w = 100 / it.ncol;
+  const pos = 'top:' + top + 'px;height:' + (h - 2) + 'px;left:calc(' + (it.col * w) + '% + 2px);width:calc(' + w + '% - 4px)';
+  if (it.kind === 'class' || it.kind === 'personal') {
+    const time = it.startOnly ? fmtTime(it.start) : fmtRange(it.start, it.end);
+    return '<div class="blk ' + it.kind + (h < 56 ? ' short' : '') + '" style="' + pos + '"><span class="t">' + esc(it.title) + '</span>' +
+      (h >= 40 ? '<span class="m">' + time + (it.where ? ', ' + esc(it.where) : '') + '</span>' : '<span class="sr-only">' + time + '</span>') + '</div>';
+  }
+  const e = EV[it.id], time = fmtRange(e.start, e.end), cls = ['blk'].concat(cairnCls(e, it.kind));
+  if (h < 56) cls.push('short');
+  const what = it.kind === 'added' ? 'On your calendar.' : it.kind === 'conflict' ? 'Pick that overlaps your calendar.' : 'Suggested pick.';
+  return '<button type="button" class="' + cls.join(' ') + '" style="' + pos + ';--i:' + (state.flashNew === e.id ? 0 : it.i) + '" data-action="open" data-id="' + e.id + '" data-key="blk:' + e.id + '" aria-label="' +
+    esc(titleOf(e) + ', ' + dayLabel(e.day) + ', ' + time + '. ' + what) + '"><span class="t">' + (it.kind === 'added' ? ICON.tiny : '') + esc(shortOf(e)) + '</span>' +
+    (h >= 40 ? '<span class="m">' + time + '</span>' : '') + '</button>';
+}
+function allDayHTML(d, items) {
+  let html = state.layers.personal ? ALLDAY.filter(a => a.day === d).map(a => '<span class="ad-chip">' + esc(a.title) + '</span>').join('') : '';
+  items.forEach(it => {
+    const e = EV[it.id];
+    html += '<button type="button" class="ad-chip ' + cairnCls(e, it.kind).join(' ') + '" data-action="open" data-id="' + e.id + '" data-key="ad:' + e.id + '" aria-label="' +
+      esc(titleOf(e) + ', ' + dayLabel(e.day) + ', all day.') + '">' + (it.kind === 'added' ? ICON.tiny : '') + esc(shortOf(e)) + '</button>';
+  });
+  return html;
+}
+function gridHTML(p) {
+  const ws = state.weekStart, days = [0, 1, 2, 3, 4, 5, 6].map(i => ws + i);
+  const items = cairnItems(p, ws, ws + 6, true);
+  const head = '<div class="ghead"><div class="grow"><div class="tz">EDT</div>' + days.map(d =>
+      '<div class="dh' + (d === TODAY ? ' today' : d < TODAY ? ' past' : '') + '"><span>' + WD[weekday(d)] + '</span><span class="dn">' + dayNum(d) + '</span></div>').join('') + '</div>' +
+    '<div class="grow"><div class="ad-gut"></div>' + days.map(d => '<div class="ad-cell">' + allDayHTML(d, items.filter(it => EV[it.id].allDay && occursOn(EV[it.id], d))) + '</div>').join('') + '</div></div>';
+  let gutter = '<div class="gutter" aria-hidden="true"><span class="first" style="top:3px">8 am</span>';
+  for (let hr = 9; hr < 24; hr++) gutter += '<span style="top:' + ((hr - 8) * HOUR) + 'px">' + hourLabel(hr) + '</span>';
+  gutter += '</div>';
+  const cols = days.map(d => {
+    const list = BASE_BUSY.filter(b => b.day === d && state.layers[b.layer]).map(b => Object.assign({}, b));
+    if (state.layers.personal) PAST.filter(x => x.day === d).forEach(x => list.push({kind:'personal', title:x.title, where:x.where, day:d, start:x.start, end:x.start + 60, startOnly:true}));
+    items.filter(it => !EV[it.id].allDay && EV[it.id].day === d).forEach(it => list.push(Object.assign({start:EV[it.id].start, end:EV[it.id].end}, it)));
+    layoutDay(list);
+    const now = d === TODAY ? '<div class="now" style="top:' + ((NOW - TODAY * 1440 - DAY_START) / 60 * HOUR) + 'px" aria-hidden="true"></div>' : '';
+    return '<div class="col">' + list.map(blockHTML).join('') + now + '</div>';
+  });
+  return head + '<div class="grid-body">' + gutter + cols.join('') + '</div>';
+}
+// Month view: up to 4 lines a day. When a day is full, Evently's own items are kept and the rest fold into "more".
+function monthHTML(p) {
+  const all = cairnItems(p, FIRST_DAY, LAST_DAY, false);
+  let cells = '';
+  for (let d = FIRST_DAY; d <= LAST_DAY; d++) {
+    const items = [];
+    if (state.layers.personal) ALLDAY.filter(a => a.day === d).forEach(a => items.push({kind:'allday', title:a.title, at:-1}));
+    all.filter(it => occursOn(EV[it.id], d)).forEach(it => items.push({kind:it.kind, id:it.id, at:EV[it.id].allDay ? -1 : EV[it.id].start}));
+    BASE_BUSY.filter(b => b.day === d && state.layers[b.layer]).forEach(b => items.push({kind:b.kind, title:b.title, at:b.start}));
+    if (state.layers.personal) PAST.filter(x => x.day === d).forEach(x => items.push({kind:'personal', title:x.title, at:x.start}));
+    let shown = items, more = 0;
+    if (items.length > 4) {
+      const keep = items.filter(x => x.id).slice(0, 3);
+      items.filter(x => !x.id).forEach(x => { if (keep.length < 3) keep.push(x); });
+      shown = keep; more = items.length - keep.length;
+    }
+    shown.sort((a, b) => a.at - b.at);
+    const t = dateOf(d), out = t.getMonth() !== 9;
+    cells += '<div class="m-cell' + (out ? ' out' : '') + (d === TODAY ? ' today' : d < TODAY ? ' past' : '') + '">' +
+      '<button type="button" class="m-date" data-action="goto-day" data-day="' + d + '" data-key="mdate:' + d + '" aria-label="' + esc('Show the week of ' + dayLabel(weekOf(d))) + '">' +
+        (t.getDate() === 1 ? MON[t.getMonth()] + ' 1' : t.getDate()) + '</button><ul class="m-list">' +
+      shown.map(x => {
+        const tm = x.at >= 0 ? '<span class="m-t">' + shortTime(x.at) + '</span>' : '';
+        if (!x.id) return '<li><span class="m-chip ' + x.kind + '">' + tm + esc(x.title) + '</span></li>';
+        const e = EV[x.id];
+        return '<li><button type="button" class="m-chip ' + cairnCls(e, x.kind).filter(c => c !== 'enter' && c !== 'just').join(' ') + '" data-action="open" data-id="' + e.id + '" data-key="m:' + e.id + '" aria-label="' +
+          esc(titleOf(e) + ', ' + whenText(e) + '. ' + (x.kind === 'added' ? 'On your calendar.' : 'Suggested pick.')) + '">' + tm + esc(shortOf(e)) + '</button></li>';
+      }).join('') +
+      (more ? '<li><button type="button" class="m-more" data-action="goto-day" data-day="' + d + '" data-key="more:' + d + '">' + more + ' more</button></li>' : '') +
+      '</ul></div>';
+  }
+  return '<div class="month"><div class="m-head" aria-hidden="true">' + WD.map(d => '<span>' + d + '</span>').join('') + '</div><div class="m-grid">' + cells + '</div></div>';
+}
+function railHTML(nOpen) {
+  return '<aside class="rail" aria-label="Add-ons"><button type="button" class="h-icon rail-btn" data-action="toggle-panel" data-key="rail" aria-pressed="' + state.panelOpen + '" aria-label="' +
+    (state.panelOpen ? 'Close ' : 'Open ') + APP + (nOpen ? ', ' + nOpen + ' picks' : '') + '">' + ICON.mark +
+    (!state.panelOpen && nOpen ? '<span class="count" aria-hidden="true">' + nOpen + '</span>' : '') + '</button>' +
+    '<span class="rail-sep" aria-hidden="true"></span><span class="rail-add"' + INERT + '>' + ICON.plus + '</span></aside>';
+}
+
+/* ===== Side panel ===== */
+function itemHTML(e, p, conflict) {
+  const a = analyze(e, p), added = state.added.has(e.id), pr = state.priority.has(e.id);
+  let tail = '';
+  if (added) tail = '<span class="state">' + ICON.check + 'On your calendar' + (pr ? ' <span class="pflag">High priority</span>' : '') + '</span>';
+  else if (conflict) tail = '<span class="state warn">Overlaps ' + esc(baseConflictOf(e)[0].ref) + '</span>';
+  return '<li><button type="button" class="pi" data-action="open" data-id="' + e.id + '" data-key="pi:' + e.id + '"><span class="pi-body">' +
+    '<span class="when">' + esc(whenText(e)) + '</span><span class="title">' + esc(titleOf(e)) + '</span><span class="where">' + esc(e.where || 'Location on the listing') + '</span>' +
+    (added ? '' : '<span class="why">' + esc(shortWhy(e, a)) + '</span>') + tail + '</span></button></li>';
+}
+function listHTML(p) {
+  const wk = state.view === 'week', range = panelRange();
+  const foot = '<div class="pfoot"><p>Events from the Dartmouth Events Calendar and Dartmouth Engineering.</p>' +
+    '<button type="button" class="link" data-action="edit" data-key="edit">Edit preferences</button></div>';
+  if (wk && range[1] < TODAY) {
+    return '<h2 class="ptitle" tabindex="-1" data-key="ptitle">This week is over</h2><p class="psub">' + APP + ' only suggests upcoming events.</p>' +
+      '<p><button type="button" class="btn btn-primary" data-action="today" data-key="back-today">Back to this week</button></p>' + foot;
+  }
+  const title = !wk ? 'Picks for the next two weeks' : range[0] === weekOf(TODAY) ? 'Picks for your week' : 'Picks for next week';
+  let html = '<h2 class="ptitle" tabindex="-1" data-key="ptitle">' + title + '</h2>';
+  const ids = state.shown.filter(id => EV[id].day >= range[0] && EV[id].day <= range[1]);
+  const extra = state.fromHistory.filter(f => !state.shown.includes(f.id) && EV[f.id].day >= range[0] && EV[f.id].day <= range[1]);
+  if (!ids.length && !extra.length) {
+    html += '<p class="psub">Nothing matches yet. Add a few interests and ' + APP + ' will look again.</p>' +
+      '<p><button type="button" class="btn btn-primary" data-action="edit" data-key="edit-empty">Edit preferences</button></p>';
+  } else {
+    const nAdded = ids.filter(id => state.added.has(id)).length;
+    html += '<p class="psub">' + ids.length + (ids.length === 1 ? ' event fits' : ' events fit') + ' your interests and your free time' +
+      (nAdded ? ', and ' + nAdded + (nAdded === 1 ? ' is' : ' are') + ' on your calendar' : '') + '.</p>';
+  }
+  if (!state.showPicks) html += '<p class="note">Suggestions are hidden on your calendar. <button type="button" class="link" data-action="toggle-picks" data-key="show-picks">Show them</button></p>';
+  for (let ws = weekOf(Math.max(range[0], TODAY)); ws <= range[1]; ws += 7) {
+    const we = Math.min(ws + 6, range[1]);
+    const wIds = ids.filter(id => EV[id].day >= ws && EV[id].day <= we).sort((x, y) => when(EV[x]) - when(EV[y]));
+    const wExtra = extra.filter(f => EV[f.id].day >= ws && EV[f.id].day <= we);
+    if (!wk && (wIds.length || wExtra.length)) html += '<h3 class="subhead">' + (ws === weekOf(TODAY) ? 'This week' : 'Next week') + '</h3>';
+    if (wIds.length) html += '<ul class="picks">' + wIds.map(id => itemHTML(EV[id], p, false)).join('') + '</ul>';
+    wExtra.forEach(f => { html += '<h3 class="subhead">New because you added ' + esc(EV[f.because].short) + '</h3><ul class="picks">' + itemHTML(EV[f.id], p, false) + '</ul>'; });
+  }
+  const conflicts = hiddenConflicts(p, range[0], range[1]);
+  if (conflicts.length) {
+    const one = conflicts.length === 1;
+    if (state.showConflicts) {
+      html += '<h3 class="subhead">Overlaps your calendar</h3><ul class="picks">' + conflicts.map(e => itemHTML(e, p, true)).join('') + '</ul>' +
+        '<p><button type="button" class="link" data-action="conflicts" data-key="conflicts">Hide ' + (one ? 'it' : 'them') + '</button></p>';
+    } else {
+      html += '<p class="note">' + (one ? '1 good match is hidden because it overlaps ' + esc(baseConflictOf(conflicts[0])[0].ref) + '.'
+        : conflicts.length + ' good matches are hidden because they overlap your calendar.') +
+        ' <button type="button" class="link" data-action="conflicts" data-key="conflicts">Show ' + (one ? 'it' : 'them') + '</button></p>';
+    }
+  }
+  return html + foot;
+}
+function detailHTML(p, e) {
+  const a = analyze(e, p), st = strength(a.score), added = state.added.has(e.id), pr = state.priority.has(e.id);
+  const clash = !added && conflictOf(e).length;
+  const icon = {ok:ICON.check, time:ICON.clock, warn:ICON.alert};
+  const why = whyRows(e, a, p).map(r => '<li class="' + r.k + '">' + icon[r.k] + '<span>' + esc(r.t) + '</span></li>').join('');
+  let also = '';
+  const entry = state.addEntries.get(e.id);
+  if (added && entry && state.fromHistory.includes(entry) && !state.added.has(entry.id)) {
+    const n = EV[entry.id];
+    also = '<div class="also"><p>You might also like</p><button type="button" class="also-btn" data-action="open" data-id="' + n.id + '" data-key="also:' + n.id + '">' +
+      '<span class="t">' + esc(n.title) + '</span><span class="m">' + esc(whenText(n)) + '</span></button></div>';
+  }
+  const tip = pr ? 'Remove high priority' : 'Mark as high priority';
+  const prio = '<button type="button" class="btn prio" data-action="priority" data-id="' + e.id + '" data-key="priority" aria-pressed="' + pr + '" aria-label="' + tip + '" data-tip="' + tip + '">!!</button>';
+  const actions = added
+    ? '<span class="added-msg" tabindex="-1" data-key="added-msg">' + ICON.check + (pr ? 'Added as high priority' : 'Added to calendar') + '</span>' + prio +
+      '<button type="button" class="btn btn-sm" data-action="remove" data-id="' + e.id + '" data-key="remove">Remove</button>'
+    : '<button type="button" class="btn btn-primary" data-action="add" data-id="' + e.id + '" data-key="add">Add to calendar</button>' + prio +
+      '<button type="button" class="btn" data-action="dismiss" data-id="' + e.id + '" data-key="dismiss">Not interested</button>';
+  const tags = e.categories.map(c => '<span class="tag">' + esc(c) + '</span>').join('') +
+    e.inferred.map(x => '<span class="tag added-tag" title="' + esc('Added by ' + APP + ': the listing mentions “' + x.from + '”') + '">' + esc(x.cat) + '</span>').join('') +
+    e.areas.map(x => '<span class="tag area-tag">' + esc(x) + '</span>').join('');
+  return '<button type="button" class="back" data-action="back" data-key="back">' + ICON.back + 'All picks</button>' +
+    '<p class="dmatch' + (clash ? ' warn' : '') + '">' + (clash ? 'Overlaps your calendar' : STRENGTH[st]) + '</p>' +
+    '<h2 class="dtitle" tabindex="-1" data-key="dtitle">' + esc(titleOf(e)) + '</h2>' +
+    '<div class="facts">' + ICON.clock + '<span>' + esc(whenText(e)) + '</span>' +
+      ICON.pin + '<span>' + (e.where ? esc(e.where) : '<a href="' + urlOf(e) + '" target="_blank" rel="noopener">Location on the listing</a>') + '</span>' +
+      (e.host ? ICON.host + '<span>' + esc(e.host) + '</span>' : '') + '</div>' +
+    (e.note ? '<p class="dnote">' + esc(e.note) + '</p>' : '') +
+    '<p class="desc">' + esc(e.desc) + '</p>' +
+    '<section class="dsec" aria-labelledby="why-h"><h3 id="why-h">Why this pick</h3><ul class="reasons">' + why + '</ul></section>' +
+    (tags ? '<section class="dsec" aria-labelledby="tags-h"><h3 id="tags-h">Tags</h3><div class="tags">' + tags + '</div>' +
+      (e.inferred.length ? '<p class="tag-note">Dashed tags were added by ' + APP + ' from the listing.</p>' : '') + '</section>' : '') +
+    '<p class="dsource">From the ' + SOURCES[e.source] + '. <a href="' + urlOf(e) + '" target="_blank" rel="noopener">View listing</a></p>' +
+    also + '<div class="dactions">' + actions + '</div>';
+}
+function panelHTML(p) {
+  return '<aside class="panel" aria-label="' + APP + ' side panel"><div class="phead">' + ICON.mark + '<span class="pname">' + APP + '</span>' +
+    '<button type="button" class="icon-btn" data-action="close-panel" data-key="close-panel" aria-label="Close ' + APP + '">' + ICON.close + '</button></div>' +
+    '<div class="pbody" id="pbody">' + (state.panel === 'detail' && state.selected ? detailHTML(p, EV[state.selected]) : listHTML(p)) + '</div></aside>';
+}
+function calHTML() {
+  const p = profile(), range = panelRange();
+  const nOpen = [...visibleIds(Math.max(range[0], TODAY), range[1])].filter(id => !state.added.has(id)).length;
+  const body = [];
+  if (state.sidebar) body.push(sidebarHTML());
+  body.push('<div class="h-main"><div class="grid-wrap" id="grid-wrap">' + (state.view === 'week' ? gridHTML(p) : monthHTML(p)) + '</div></div>');
+  if (state.panelOpen) body.push(panelHTML(p));
+  body.push(railHTML(nOpen));
+  return '<div class="cal">' + topbarHTML() + '<div class="h-body' + (state.sidebar ? ' sb' : '') + (state.panelOpen ? ' pn' : '') + '">' + body.join('') + '</div></div>';
+}
+
+/* ===== Render ===== */
+function render() {
+  const ae = document.activeElement;
+  const activeKey = ae && ae.dataset ? ae.dataset.key : null;
+  const explicit = !!state.focusKey;
+  const want = state.focusKey || activeKey;
+  state.focusKey = null;
+  const gw = $('#grid-wrap'), gs = gw ? [gw.scrollTop, gw.scrollLeft, gw.dataset.view] : null;
+  const pb = $('#pbody'), ps = pb ? pb.scrollTop : 0;
+  const panelKey = state.panel + ':' + state.selected;
+
+  $('#tabs').innerHTML = tabsHTML();
+  const setupEl = $('#screen-setup'), calEl = $('#screen-cal');
+  setupEl.hidden = state.tab !== 'website';
+  calEl.hidden = state.tab === 'website';
+  if (state.tab === 'website') { setupEl.innerHTML = siteHTML(); calEl.innerHTML = ''; }
+  else { calEl.innerHTML = calHTML(); setupEl.innerHTML = ''; }
+
+  const gw2 = $('#grid-wrap');
+  if (gw2) {
+    gw2.dataset.view = state.view + ':' + state.weekStart;
+    if (gs && gs[2] === gw2.dataset.view) { gw2.scrollTop = gs[0]; gw2.scrollLeft = gs[1]; }
+  }
+  const pb2 = $('#pbody');
+  if (pb2) {
+    if (pendingPanelScroll !== null) { pb2.scrollTop = pendingPanelScroll; pendingPanelScroll = null; }
+    else if (panelKey === lastPanelKey) pb2.scrollTop = ps;
+  }
+  lastPanelKey = panelKey;
+  if (want) {
+    const el = Array.prototype.find.call(document.querySelectorAll('[data-key]'), n => n.dataset.key === want);
+    if (el && !el.disabled) { try { el.focus({preventScroll: !explicit}); } catch (err) { el.focus(); } }
+  }
+}
+function revealBlock(id) {
+  const b = Array.prototype.find.call(document.querySelectorAll('#grid-wrap [data-id]'), n => n.dataset.id === id);
+  if (b && b.scrollIntoView) b.scrollIntoView({block:'nearest', inline:'nearest', behavior: reduceMotion ? 'auto' : 'smooth'});
+}
+
+/* ===== Actions ===== */
+function connect() {
+  if (state.connected || state.connecting) return;
+  state.connecting = true; render();
+  setTimeout(() => { state.connecting = false; state.connected = true; state.focusKey = 'start'; render(); }, 700);
+}
+function enterCalendar() {
+  if (!state.connected) { state.connected = true; state.connecting = false; }
+  buildList();
+  state.tab = 'calendar'; state.panelOpen = true; state.panel = 'list'; state.selected = null;
+  state.entering = true;
+  setTimeout(() => { state.entering = false; }, 1600);
+}
+function openEvent(id) {
+  const pb = $('#pbody');
+  if (state.panel === 'list' && pb) savedListScroll = pb.scrollTop;
+  const wk = weekOf(EV[id].day);
+  if (state.view === 'week' && wk !== state.weekStart) state.weekStart = wk;
+  state.selected = id; state.panel = 'detail'; state.panelOpen = true; state.focusKey = 'dtitle';
+  render(); revealBlock(id);
+}
+function back() {
+  const id = state.selected;
+  state.panel = 'list'; state.selected = null;
+  pendingPanelScroll = savedListScroll;
+  state.focusKey = id ? 'pi:' + id : 'ptitle';
+  render();
+}
+function addEvent(id, asPriority) {
+  if (state.added.has(id)) return;
+  state.added.add(id);
+  if (asPriority) state.priority.add(id);
+  state.layers.cairn = true;
+  if (!state.shown.includes(id)) state.shown.push(id);
+  state.fromHistory = state.fromHistory.filter(f => f.id !== id);
+  // Event history: look for one more pick that week that shares something with what was just added.
+  const p = profile(), e = EV[id], ws = weekOf(e.day), vis = visibleIds(FIRST_DAY, LAST_DAY);
+  const cand = pool(p, ws, ws + 6).filter(x => !vis.has(x.id) && analyze(x, p).score >= 3 &&
+    (x.interests.some(i => e.interests.includes(i)) || x.allCats.some(c => e.allCats.includes(c)))).sort(rankWith(p))[0];
+  let entry = null;
+  if (cand) { entry = {id:cand.id, because:id}; state.fromHistory.unshift(entry); state.fromHistory = state.fromHistory.slice(0, 2); state.flashNew = cand.id; }
+  state.addEntries.set(id, entry);
+  state.justAdded = id;
+  state.focusKey = 'added-msg';
+  render(); revealBlock(id);
+  showToast(asPriority ? 'Added as high priority.' : 'Added to calendar.', () => removeEvent(id, true));
+  setTimeout(() => { if (state.justAdded === id) state.justAdded = null; if (entry && state.flashNew === entry.id) state.flashNew = null; }, 1200);
+}
+function removeEvent(id, fromUndo) {
+  if (!state.added.has(id)) return;
+  state.added.delete(id);
+  state.priority.delete(id);
+  const entry = state.addEntries.get(id);
+  if (entry) state.fromHistory = state.fromHistory.filter(f => f !== entry);
+  state.addEntries.delete(id);
+  if (state.selected === id) state.focusKey = 'add';
+  render();
+  if (fromUndo) hideToast(); else showToast('Removed from calendar.');
+}
+// "!!" marks an event as high priority. If it isn't on the calendar yet, it's added at the same time.
+function togglePriority(id) {
+  if (state.priority.has(id)) { state.priority.delete(id); state.focusKey = 'priority'; render(); showToast('Removed high priority.'); return; }
+  if (!state.added.has(id)) { addEvent(id, true); return; }
+  state.priority.add(id); state.focusKey = 'priority'; render();
+  showToast('Marked as high priority.', () => { state.priority.delete(id); hideToast(); render(); });
+}
+function dismissEvent(id) {
+  state.dismissed.add(id);
+  const idx = state.shown.indexOf(id), wasShown = idx !== -1;
+  if (wasShown) state.shown.splice(idx, 1);
+  const histEntry = state.fromHistory.find(f => f.id === id);
+  state.fromHistory = state.fromHistory.filter(f => f.id !== id);
+  let filled = null;
+  if (wasShown) { const nb = nextBest(profile(), EV[id]); if (nb) { state.shown.push(nb.id); filled = nb.id; } }
+  state.panel = 'list'; state.selected = null; state.focusKey = 'ptitle';
+  pendingPanelScroll = savedListScroll;
+  render();
+  showToast("Marked not interested. You'll see fewer like this.", () => {
+    state.dismissed.delete(id);
+    if (filled) state.shown = state.shown.filter(x => x !== filled);
+    if (wasShown) state.shown.push(id);
+    if (histEntry) state.fromHistory.unshift(histEntry);
+    hideToast(); render();
+  });
+}
+function goTab(tab, toPrefs) {
+  hideToast();
+  if (tab === 'website') {
+    state.tab = 'website';
+    if (!state.connected) state.site = 'welcome';
+    else if (toPrefs || (state.svDone && state.site === 'welcome')) { state.site = state.svDone ? 'prefs' : 'survey'; state.editing = null; }
+    state.focusKey = toPrefs ? (state.site === 'prefs' ? 'prefs-title' : 'obq') : 'tab:website';
+    render(); window.scrollTo(0, 0); return;
+  }
+  enterCalendar(); state.focusKey = 'tab:calendar'; render(); window.scrollTo(0, 0);
+}
+function finishSurvey() {
+  state.svDone = true; state.site = 'prefs'; state.editing = null; state.focusKey = 'prefs-title';
+  render(); window.scrollTo(0, 0);
+}
+function toQuestion(i) { state.svPage = i; state.focusKey = 'obq'; render(); window.scrollTo(0, 0); }
+function restart() {
+  hideToast();
+  state = freshState();
+  savedListScroll = 0; pendingPanelScroll = null; lastPanelKey = '';
+  state.focusKey = 'setup-title';
+  render(); window.scrollTo(0, 0);
+}
+
+/* ===== Toast ===== */
+function showToast(msg, undo) {
+  const t = $('#toast');
+  toastUndo = undo || null;
+  t.innerHTML = '<span>' + esc(msg) + '</span>' + (undo ? '<button type="button" data-action="undo">Undo</button>' : '');
+  t.hidden = false; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, 6000);
+}
+function hideToast() { const t = $('#toast'); t.hidden = true; toastUndo = null; clearTimeout(toastTimer); }
+
+/* ===== Events ===== */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-action]');
+  if (!t || t.disabled) return;
+  const v = t.dataset.val, id = t.dataset.id;
+  switch (t.dataset.action) {
+    case 'tab': goTab(t.dataset.tab); break;
+    case 'restart': restart(); break;
+    case 'connect': connect(); break;
+    case 'start': state.site = 'survey'; state.editing = null; toQuestion(0); break;
+    case 'cat': toggle(state.cats, v); render(); break;
+    case 'area': toggle(state.areas, v); render(); break;
+    case 'topic': toggle(state.topics, v); render(); break;
+    case 'time': toggle(state.times, v); render(); break;
+    case 'int': toggle(state.intOff, v); render(); break;
+    case 'goal': if (state.goals.has(v)) state.goals.delete(v); else if (state.goals.size < 3) state.goals.add(v); render(); break;
+    case 'campus': state.trips = state.trips === 'no' ? null : 'no'; render(); break;
+    case 'rate': state.rated[id] = v; state.sampleIdx++; state.focusKey = state.sampleIdx < SAMPLES.length ? 'ecard' : 'rate-reset'; render(); break;
+    case 'rate-reset': state.rated = {}; state.sampleIdx = 0; state.focusKey = 'ecard'; render(); break;
+    case 'sv-next':
+    case 'sv-skip': if (state.svPage >= FLOW.length - 1) finishSurvey(); else toQuestion(state.svPage + 1); break;
+    case 'sv-back':
+      if (state.svPage > 0) toQuestion(state.svPage - 1);
+      else { state.site = 'welcome'; state.focusKey = 'w-title'; render(); window.scrollTo(0, 0); }
+      break;
+    case 'sv-finish': finishSurvey(); break;
+    case 'edit-q': state.editing = +t.dataset.q; state.site = 'survey'; state.focusKey = 'obq'; render(); window.scrollTo(0, 0); break;
+    case 'edit-close': state.editing = null; state.site = 'prefs'; state.focusKey = 'prefs-title'; render(); window.scrollTo(0, 0); break;
+    case 'see': if (state.connected) { enterCalendar(); state.focusKey = 'ptitle'; render(); window.scrollTo(0, 0); } break;
+    case 'open': openEvent(id); break;
+    case 'back': back(); break;
+    case 'add': addEvent(id, false); break;
+    case 'priority': togglePriority(id); break;
+    case 'remove': removeEvent(id, false); break;
+    case 'dismiss': dismissEvent(id); break;
+    case 'close-panel': state.panelOpen = false; state.focusKey = 'rail'; render(); break;
+    case 'toggle-panel':
+      state.panelOpen = !state.panelOpen;
+      state.focusKey = state.panelOpen ? (state.panel === 'detail' && state.selected ? 'dtitle' : 'ptitle') : 'rail';
+      render(); break;
+    case 'toggle-picks': state.showPicks = !state.showPicks; state.focusKey = t.dataset.key === 'show-picks' ? 'toggle-picks' : t.dataset.key; render(); break;
+    case 'sidebar': state.sidebar = !state.sidebar; state.focusKey = 'sidebar'; render(); break;
+    case 'today': state.weekStart = weekOf(TODAY); state.focusKey = t.dataset.key === 'back-today' ? 'ptitle' : 'today'; render(); break;
+    case 'prev': state.weekStart = Math.max(weekOf(FIRST_DAY), state.weekStart - 7); if (state.panel === 'detail') { state.panel = 'list'; state.selected = null; } render(); break;
+    case 'next': state.weekStart = Math.min(weekOf(LAST_DAY), state.weekStart + 7); if (state.panel === 'detail') { state.panel = 'list'; state.selected = null; } render(); break;
+    case 'view': state.view = t.dataset.view; state.focusKey = 'view:' + state.view; render(); break;
+    case 'goto-day':
+      state.view = 'week'; state.weekStart = weekOf(+t.dataset.day);
+      if (state.panel === 'detail' && state.selected && weekOf(EV[state.selected].day) !== state.weekStart) { state.panel = 'list'; state.selected = null; }
+      state.focusKey = 'view:week'; render(); break;
+    case 'edit': goTab('website', true); break;
+    case 'conflicts': state.showConflicts = !state.showConflicts; state.focusKey = 'conflicts'; render(); break;
+    case 'undo': if (toastUndo) { const u = toastUndo; toastUndo = null; u(); } break;
+  }
+});
+// Sliders update their label as they move, without re-rendering the page mid-drag.
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (t.type !== 'range') return;
+  let txt;
+  if (t.name === 'spare') { const val = SPARE_STEPS[+t.value]; state.spare = val; txt = SPARE_LABEL[val]; }
+  else if (t.name === 'per') { state.perWeek = +t.value; txt = t.value + (t.value === '1' ? ' pick' : ' picks'); }
+  else return;
+  const out = document.getElementById('val-' + t.name);
+  if (out) out.textContent = txt;
+  t.setAttribute('aria-valuetext', txt);
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.dataset.layer) { state.layers[t.dataset.layer] = t.checked; state.focusKey = 'layer:' + t.dataset.layer; render(); return; }
+  if (t.dataset.picks) { state.showPicks = t.checked; state.focusKey = 'layer:picks'; render(); return; }
+  if (t.name === 'crowd') { state.crowd = t.value; state.focusKey = 'crowd:' + t.value; render(); }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && state.tab === 'calendar' && state.panelOpen && state.panel === 'detail') back();
+});
+// Hovering a pick in the list highlights it on the calendar, and the other way around.
+const HL = '.blk[data-id], .pi[data-id], .m-chip[data-id], .ad-chip[data-id]';
+function setHL(target, on) {
+  const id = target.dataset.id;
+  document.querySelectorAll(HL).forEach(n => { if (n.dataset.id === id) n.classList.toggle('hl', on); });
+}
+['mouseover', 'focusin'].forEach(type => document.addEventListener(type, ev => {
+  const t = ev.target.closest && ev.target.closest(HL);
+  if (t && !(ev.relatedTarget && t.contains(ev.relatedTarget))) setHL(t, true);
+}));
+['mouseout', 'focusout'].forEach(type => document.addEventListener(type, ev => {
+  const t = ev.target.closest && ev.target.closest(HL);
+  if (t && !(ev.relatedTarget && t.contains(ev.relatedTarget))) setHL(t, false);
+}));
+
+/* ===== Init ===== */
+document.querySelectorAll('[data-app-name]').forEach(n => { n.textContent = APP; });
+const proto = $('#proto');
+const setH = () => document.documentElement.style.setProperty('--proto-h', proto.offsetHeight + 'px');
+if (window.ResizeObserver) new ResizeObserver(setH).observe(proto);
+setH();
+render();
+})();
+</script>
+</body>
+</html>
